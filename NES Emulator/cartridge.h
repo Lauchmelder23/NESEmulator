@@ -7,7 +7,8 @@ struct Bus;
 
 struct Cartridge
 {
-	Byte* memory;
+	Byte* prg_rom;
+	Byte* chr_rom;
 
 	struct Bus* bus;
 };

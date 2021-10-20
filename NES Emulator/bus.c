@@ -26,7 +26,7 @@ struct Bus* createBus()
 	bus->cpu = createCPU(bus);
 
 	// Create and insert cartridge
-	bus->cartridge = createCartridge(bus, "nestest.nes");
+	bus->cartridge = createCartridge(bus, "roms/nestest.nes");
 
 	return bus;
 }
@@ -42,10 +42,12 @@ void destroyBus(struct Bus* bus)
 
 Byte Read(struct Bus* bus, Word addr)
 {
+	Byte val = 0;
+
 	// Return from the appropriate device depending on the address
 	if (addr <= 0x1FFF)	// RAM (or one of the mirrored addresses)
 	{
-		return bus->ram[addr & 0x7FF];
+		val = bus->ram[addr & 0x7FF];
 	}
 	else if (0x4020 <= addr && addr <= 0xFFFF)	// Cartridge space
 	{
@@ -56,6 +58,8 @@ Byte Read(struct Bus* bus, Word addr)
 		fprintf(stderr, "Access violation at $%x", addr);
 		exit(1);
 	}
+
+	return val;
 }
 
 void Write(struct Bus* bus, Word addr, Byte val)
