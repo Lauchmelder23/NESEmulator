@@ -28,6 +28,8 @@ struct Bus* createBus()
 	// Create and insert cartridge
 	bus->cartridge = createCartridge(bus, "roms/nestest.nes");
 
+	printf("Reset vector: $%x\n", ((Word)readCartridge(bus->cartridge, 0xFFFD) << 8) | (readCartridge(bus->cartridge, 0xFFFC)));
+
 	return bus;
 }
 
@@ -40,7 +42,7 @@ void destroyBus(struct Bus* bus)
 	free(bus);
 }
 
-Byte Read(struct Bus* bus, Word addr)
+Byte readBus(struct Bus* bus, Word addr)
 {
 	Byte val = 0;
 
@@ -62,9 +64,9 @@ Byte Read(struct Bus* bus, Word addr)
 	return val;
 }
 
-void Write(struct Bus* bus, Word addr, Byte val)
+void writeBus(struct Bus* bus, Word addr, Byte val)
 {
-	// Write to the appropriate memory or device
+	// writeCartridge to the appropriate memory or device
 	if (addr <= 0x1FFF)	// RAM (or one of the mirrored addresses)
 	{
 		bus->ram[addr & 0x7FF] = val;

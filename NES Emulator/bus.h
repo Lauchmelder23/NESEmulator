@@ -22,7 +22,7 @@ struct Bus* createBus();
 void destroyBus(struct Bus* bus);
 
 // Read/Write to and from the bus
-Byte Read(struct Bus* bus, Word addr);
-void Write(struct Bus* bus, Word addr, Byte val);
+Byte readBus(struct Bus* bus, Word addr);
+void writeBus(struct Bus* bus, Word addr, Byte val);
 
 #endif // _BUS_H_
