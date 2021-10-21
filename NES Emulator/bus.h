@@ -25,4 +25,8 @@ void destroyBus(struct Bus* bus);
 Byte readBus(struct Bus* bus, Word addr);
 void writeBus(struct Bus* bus, Word addr, Byte val);
 
+
+// Ticks the master clock 12 times (i.e. 1 CPU tick & 3 PPU dots)
+void tick(struct Bus* bus);
+
 #endif // _BUS_H_

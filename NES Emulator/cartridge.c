@@ -40,10 +40,8 @@ struct Cartridge* createCartridge(struct Bus* parent, const char* filepath)
 		exit(1);
 	}
 
-	// Open ROM
 	FILE* fp = fopen(filepath, "rb");
 	
-	// readCartridge header
 	struct INES_Header header;
 	fread(&header, sizeof(header), 1, fp);
 

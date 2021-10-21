@@ -53,7 +53,7 @@ Byte readBus(struct Bus* bus, Word addr)
 	}
 	else if (0x4020 <= addr && addr <= 0xFFFF)	// Cartridge space
 	{
-		// rom->read()
+		val = readCartridge(bus->cartridge, addr);
 	}
 	else
 	{
@@ -73,11 +73,17 @@ void writeBus(struct Bus* bus, Word addr, Byte val)
 	}
 	else if (0x4020 <= addr && addr <= 0xFFFF)	// Cartridge space
 	{
-		// rom->write()
+		writeCartridge(bus->cartridge, addr, val);
 	}
 	else
 	{
 		fprintf(stderr, "Access violation at $%x", addr);
 		exit(1);
 	}
+}
+
+
+void tick(struct Bus* bus)
+{
+	tickInstr(bus->cpu);
 }
