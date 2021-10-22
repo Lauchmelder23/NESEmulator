@@ -57,7 +57,16 @@ struct CPU
 		Byte raw;
 	} status;
 
-	Word pc;
+	union
+	{
+		struct
+		{
+			Byte lo;
+			Byte hi;
+		};
+
+		Word word;
+	} pc;
 
 	Byte remainingCycles;
 	size_t totalCycles;

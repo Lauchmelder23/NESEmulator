@@ -1,6 +1,7 @@
 #include "bus.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <memory.h>
 
 #include "cpu.h"
 #include "cartridge.h"
@@ -21,6 +22,15 @@ struct Bus* createBus()
 		fprintf(stderr, "Failed to allocate memory for NES RAM, aborting.");
 		exit(1);
 	}
+	memset(bus->ram, 0x00, 0x800);
+
+	bus->io = (Byte*)malloc(0x18);
+	if (bus->io == NULL)
+	{
+		fprintf(stderr, "Failed to allocate memory for NES I/O, aborting.");
+		exit(1);
+	}
+	memset(bus->ram, 0x00, 0x18);
 
 	// Create CPU and attach it
 	bus->cpu = createCPU(bus);
@@ -38,6 +48,7 @@ void destroyBus(struct Bus* bus)
 	destroyCartridge(bus->cartridge);
 	destroyCPU(bus->cpu);
 	
+	free(bus->io);
 	free(bus->ram);
 	free(bus);
 }
@@ -50,6 +61,10 @@ Byte readBus(struct Bus* bus, Word addr)
 	if (addr <= 0x1FFF)	// RAM (or one of the mirrored addresses)
 	{
 		val = bus->ram[addr & 0x7FF];
+	}
+	else if (0x4000 <= addr && addr <= 0x4017)	// I/O space
+	{
+		val = bus->io[addr - 0x4000];
 	}
 	else if (0x4020 <= addr && addr <= 0xFFFF)	// Cartridge space
 	{
@@ -70,6 +85,10 @@ void writeBus(struct Bus* bus, Word addr, Byte val)
 	if (addr <= 0x1FFF)	// RAM (or one of the mirrored addresses)
 	{
 		bus->ram[addr & 0x7FF] = val;
+	}
+	else if (0x4000 <= addr && addr <= 0x4017)	// I/O space
+	{
+		bus->io[addr - 0x4000] = val;
 	}
 	else if (0x4020 <= addr && addr <= 0xFFFF)	// Cartridge space
 	{

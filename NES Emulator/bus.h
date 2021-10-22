@@ -10,6 +10,7 @@ struct Cartridge;
 struct Bus
 {
 	Byte* ram;
+	Byte* io;
 
 	struct CPU* cpu;
 	struct Cartridge* cartridge;
