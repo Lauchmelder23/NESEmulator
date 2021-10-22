@@ -47,6 +47,9 @@ void destroyCPU(struct CPU* cpu)
 
 int tickCPU(struct CPU* cpu)
 {
+	if (cpu->remainingCycles == -1)	// Jammed
+		return 1;
+
 	cpu->remainingCycles--;
 	cpu->totalCycles += 1;
 

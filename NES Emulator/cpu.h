@@ -14,7 +14,9 @@ enum Operation
 	INC, INX, INY, JMP, JSR, LDA, LDX, LDY,
 	LSR, NOP, ORA, PHA, PHP, PLA, PLP, ROL,
 	ROR, RTI, RTS, SBC, SEC, SED, SEI, STA,
-	STX, STY, TAX, TAY, TSX, TXA, TXS, TYA
+	STX, STY, TAX, TAY, TSX, TXA, TXS, TYA,
+
+	JAM, SLO, ANC
 };
 
 enum AddrMode
@@ -28,6 +30,7 @@ struct Opcode
 	enum AddrMode addr;
 	Byte cycles;
 	Byte length;
+	Byte illegal;
 
 	const char str[4];
 };
@@ -68,7 +71,7 @@ struct CPU
 		Word word;
 	} pc;
 
-	Byte remainingCycles;
+	char remainingCycles;
 	size_t totalCycles;
 
 	Byte fetchedVal;
