@@ -5,7 +5,7 @@
 
 struct Bus;
 
-typedef enum
+enum Operation
 {
 	XXX = 0,
 	ADC, AND, ASL, BCC, BCS, BEQ, BIT, BMI,
@@ -15,23 +15,23 @@ typedef enum
 	LSR, NOP, ORA, PHA, PHP, PLA, PLP, ROL,
 	ROR, RTI, RTS, SBC, SEC, SED, SEI, STA,
 	STX, STY, TAX, TAY, TSX, TXA, TXS, TYA
-} Operation;
+};
 
-typedef enum 
+enum AddrMode
 {
-	ACC, ABS, ABX, ABY, IMM, IMP, IND, XIN, INY, REL, ZPG, ZPX, ZPY
-} AddrMode;
+	ACC, ABS, ABX, ABY, IMM, IMP, IND, INDX, INDY, REL, ZPG, ZPX, ZPY
+};
 
 struct Opcode
 {
-	Operation op;
-	AddrMode addr;
+	enum Operation op;
+	enum AddrMode addr;
 	Byte cycles;
 
 	const char str[4];
 };
 
-const struct Opcode OPCODE_MATRIX[512];
+const struct Opcode OPCODE_TABLE[256];
 
 
 struct CPU
@@ -59,8 +59,11 @@ struct CPU
 	Word pc;
 
 	Byte remainingCycles;
+
 	Byte fetchedVal;
 	Word fetchedAddress;
+	char fetchedRelAddress;
+
 	const struct Opcode* currentOpcode;
 
 	struct Bus* bus;
