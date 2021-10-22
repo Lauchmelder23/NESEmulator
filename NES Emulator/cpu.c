@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "log.h"
 #include "bus.h"
 
 struct CPU* createCPU(struct Bus* parent)
@@ -16,6 +17,14 @@ struct CPU* createCPU(struct Bus* parent)
 	// TODO: THIS IS JUST FOR THE TEST ROM
 	cpu->pc = 0xC000;
 
+	cpu->status.raw = 0x34;
+	cpu->acc = 0;
+	cpu->x = 0;
+	cpu->y = 0;
+
+	cpu->remainingCycles = 7;
+	cpu->totalCycles = 0;
+
 	cpu->bus = parent;
 	return cpu;
 }
@@ -25,27 +34,29 @@ void destroyCPU(struct CPU* cpu)
 	free(cpu);
 }
 
-void tickCPU(struct CPU* cpu)
+int tickCPU(struct CPU* cpu)
 {
-	if (cpu->fetchedVal != 0)
+	cpu->remainingCycles--;
+	cpu->totalCycles += 1;
+
+	if (cpu->remainingCycles == 0)
 	{
-		cpu->fetchedVal--;
-		return;
+		fetch(cpu);
+		execute(cpu);
+		return 1;
 	}
 
-	fetch(cpu);
-	execute(cpu);
+	return 0;
 }
 
 void tickInstr(struct CPU* cpu)
 {
-	while (cpu->remainingCycles > 1)
-		tickCPU(cpu);
+	while (!tickCPU(cpu));
 }
 
 void fetch(struct CPU* cpu)
 {
-	Byte opcodeVal = readBus(cpu->bus, cpu->pc);
+	Byte opcodeVal = readBus(cpu->bus, cpu->pc++);
 	cpu->currentOpcode = OPCODE_TABLE + opcodeVal;
 
 	if (cpu->currentOpcode->op == XXX)
@@ -164,6 +175,8 @@ void fetch(struct CPU* cpu)
 
 void execute(struct CPU* cpu)
 {
+	LOG_BUS(cpu->bus);
+
 	switch (cpu->currentOpcode->op)
 	{
 	case JMP:

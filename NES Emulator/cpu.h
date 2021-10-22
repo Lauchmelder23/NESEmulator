@@ -27,6 +27,7 @@ struct Opcode
 	enum Operation op;
 	enum AddrMode addr;
 	Byte cycles;
+	Byte length;
 
 	const char str[4];
 };
@@ -59,6 +60,7 @@ struct CPU
 	Word pc;
 
 	Byte remainingCycles;
+	size_t totalCycles;
 
 	Byte fetchedVal;
 	Word fetchedAddress;
@@ -72,7 +74,7 @@ struct CPU
 struct CPU* createCPU(struct Bus* parent);
 void destroyCPU(struct CPU* cpu);
 
-void tickCPU(struct CPU* cpu);
+int tickCPU(struct CPU* cpu);
 void tickInstr(struct CPU* cpu);
 
 void fetch(struct CPU* cpu);
