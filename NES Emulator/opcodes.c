@@ -245,7 +245,7 @@ const struct Opcode OPCODE_TABLE[256] =
 	/* E0 */	NEW_OPCODE(CPX, IMM,	 2, 2, 0),
 	/* E1 */	NEW_OPCODE(SBC, INDX,	 6, 2, 0),
 	/* E2 */	NEW_OPCODE(NOP, IMM,	 2, 2, 1),
-	/* E3 */	NEW_OPCODE(ISX, INDX,	 8, 2, 1),
+	/* E3 */	NEW_OPCODE(ISC, INDX,	 8, 2, 1),
 	/* E4 */	NEW_OPCODE(CPX, ZPG,	 3, 2, 0),
 	/* E5 */	NEW_OPCODE(SBC, ZPG,	 3, 2, 0),
 	/* E6 */	NEW_OPCODE(INC, ZPG,	 5, 2, 0),

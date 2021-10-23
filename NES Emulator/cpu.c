@@ -388,6 +388,19 @@ void execute(struct CPU* cpu)
 		cpu->status.carry = (cpu->fetchedVal <= cpu->y);
 	} break;
 
+	case DCP:
+	{
+		cpu->fetchedVal--;
+		writeBus(cpu->bus, cpu->fetchedAddress, cpu->fetchedVal);
+		Byte result = cpu->acc - cpu->fetchedVal;
+
+		cpu->status.negative = (result >> 7);
+		cpu->status.zero = (result == 0x00);
+		cpu->status.carry = (cpu->fetchedVal <= cpu->acc);
+
+		cpu->remainingCycles = cpu->currentOpcode->cycles;
+	} break;
+
 	case DEC:
 	{
 		cpu->fetchedVal--;
@@ -446,6 +459,22 @@ void execute(struct CPU* cpu)
 
 		cpu->status.negative = ((cpu->y & 0x80) == 0x80);
 		cpu->status.zero = (cpu->y == 0x00);
+	} break;
+
+	case ISC:
+	{
+		cpu->fetchedVal++;
+		writeBus(cpu->bus, cpu->fetchedAddress, cpu->fetchedVal);
+		Word result = cpu->acc + ~cpu->fetchedVal + cpu->status.carry;
+
+		cpu->status.carry = ((result & 0x8000) != 0x8000);
+		cpu->status.overflow = ((~(cpu->acc ^ ~cpu->fetchedVal) & (cpu->acc ^ result) & 0x80) == 0x80);
+		cpu->status.negative = ((result & 0x80) == 0x80);
+		cpu->status.zero = ((result & 0xFF) == 0x00);
+
+		cpu->acc = result & 0xFF;
+
+		cpu->remainingCycles = cpu->currentOpcode->cycles;
 	} break;
 
 	case JMP:
@@ -547,6 +576,23 @@ void execute(struct CPU* cpu)
 		cpu->status.raw = Pop(cpu->bus) | 0b00110000;
 	} break;
 
+	case RLA:
+	{
+		Byte oldCarry = cpu->status.carry;
+		cpu->status.carry = ((cpu->fetchedVal & 0x80) == 0x80);
+
+		cpu->fetchedVal <<= 1;
+		cpu->fetchedVal |= oldCarry;
+
+		writeBus(cpu->bus, cpu->fetchedAddress, cpu->fetchedVal);
+		cpu->acc &= cpu->fetchedVal;
+
+		cpu->status.negative = ((cpu->acc & 0x80) == 0x80);
+		cpu->status.zero = (cpu->acc == 0x00);
+
+		cpu->remainingCycles = cpu->currentOpcode->cycles;
+	} break;
+
 	case ROL:
 	{
 		Byte oldCarry = cpu->status.carry;
@@ -581,6 +627,27 @@ void execute(struct CPU* cpu)
 			cpu->acc = cpu->fetchedVal;
 	} break;
 
+	case RRA:
+	{
+		Byte oldCarry = cpu->status.carry;
+		cpu->status.carry = ((cpu->fetchedVal & 0x01) == 0x01);
+
+		cpu->fetchedVal >>= 1;
+		cpu->fetchedVal |= (oldCarry << 7);
+
+		writeBus(cpu->bus, cpu->fetchedAddress, cpu->fetchedVal);
+
+		Word result = cpu->acc + cpu->fetchedVal + cpu->status.carry;
+
+		cpu->status.carry = (result > 0xFF);
+		cpu->status.overflow = ((~(cpu->acc ^ cpu->fetchedVal) & (cpu->acc ^ result) & 0x80) == 0x80);
+		cpu->status.negative = (result >> 7);
+		cpu->status.zero = ((result & 0xFF) == 0x00);
+
+		cpu->acc = result & 0xFF;
+		cpu->remainingCycles = cpu->currentOpcode->cycles;
+	} break;
+
 	case RTI:
 	{
 		cpu->status.raw = Pop(cpu->bus) | 0b00110000;
@@ -594,6 +661,11 @@ void execute(struct CPU* cpu)
 		cpu->pc.lo = Pop(cpu->bus);
 		cpu->pc.hi = Pop(cpu->bus);
 		cpu->pc.word++;
+	} break;
+
+	case SAX:
+	{
+		writeBus(cpu->bus, cpu->fetchedAddress, cpu->acc & cpu->x);
 	} break;
 
 	case SBC:
@@ -621,6 +693,36 @@ void execute(struct CPU* cpu)
 	case SEI:
 	{
 		cpu->status.id = 1;
+	} break;
+
+	case SLO:
+	{
+		cpu->status.carry = ((cpu->fetchedVal & 0x80) == 0x80);
+
+		cpu->fetchedVal <<= 1;
+
+		writeBus(cpu->bus, cpu->fetchedAddress, cpu->fetchedVal);
+		cpu->acc |= cpu->fetchedVal;
+
+		cpu->status.negative = ((cpu->acc & 0x80) == 0x80);
+		cpu->status.zero = (cpu->acc == 0x00);
+
+		cpu->remainingCycles = cpu->currentOpcode->cycles;
+	} break;
+
+	case SRE:
+	{
+		cpu->status.carry = ((cpu->fetchedVal & 0x01) == 0x01);
+
+		cpu->fetchedVal >>= 1;
+
+		writeBus(cpu->bus, cpu->fetchedAddress, cpu->fetchedVal);
+		cpu->acc ^= cpu->fetchedVal;
+
+		cpu->status.negative = ((cpu->acc & 0x80) == 0x80);
+		cpu->status.zero = (cpu->acc == 0x00);
+
+		cpu->remainingCycles = cpu->currentOpcode->cycles;
 	} break;
 
 	case STA:
