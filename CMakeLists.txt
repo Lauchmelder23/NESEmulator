@@ -1,9 +1,6 @@
-﻿# CMakeList.txt: CMake-Projektdatei der obersten Ebene. Führen Sie hier die globale Konfiguration aus,
-# und schließen Sie Unterprojekte ein.
-#
-cmake_minimum_required (VERSION 3.8)
+﻿cmake_minimum_required (VERSION 3.8)
 
 project ("NES Emulator")
 
-# Schließen Sie Unterprojekte ein.
+add_subdirectory ("vendor/SDL")
 add_subdirectory ("NES Emulator")

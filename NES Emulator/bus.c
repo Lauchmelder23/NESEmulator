@@ -42,7 +42,7 @@ struct Bus* createBus()
 	// Create PPU and attack it
 	bus->ppu = createPPU(bus);
 
-	printf("Reset vector: $%x\n", ((Word)readCartridge(bus->cartridge, 0xFFFD) << 8) | (readCartridge(bus->cartridge, 0xFFFC)));
+	bus->masterClockTimer = 0;
 
 	return bus;
 }
@@ -115,10 +115,26 @@ void writeBus(struct Bus* bus, Word addr, Byte val)
 }
 
 
-void tick(struct Bus* bus)
+int tick(struct Bus* bus)
 {
-	for (int i = 0; i < 3; i++)
-		tickPPU(bus->ppu);
+	bus->masterClockTimer++;
 
-	tickCPU(bus->cpu);
+	tickPPU(bus->ppu);
+	if (bus->masterClockTimer == 3)
+	{
+		tickCPU(bus->cpu);
+		bus->masterClockTimer = 0;
+	}
+}
+
+int doInstruction(struct Bus* bus)
+{
+	while(bus->cpu->remainingCycles > 0)
+		tick(bus);
+	tick(bus);
+}
+
+int doFrame(struct Bus* bus)
+{
+	do tick(bus); while (bus->ppu->x != 0 || bus->ppu->y != 0);
 }

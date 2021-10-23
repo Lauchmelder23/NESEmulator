@@ -2,6 +2,7 @@
 #define _PPU_H_
 
 #include "types.h"
+#include "SDL.h"
 
 struct Bus;
 
@@ -94,8 +95,6 @@ struct PPU
 
 	Word x, y;
 
-
-
 	struct Bus* bus;
 };
 
@@ -105,6 +104,6 @@ void destroyPPU(struct PPU* ppu);
 Byte ppuRead(struct PPU* ppu, Word addr);
 void ppuWrite(struct PPU* ppu, Word addr, Byte val);
 
-void tickPPU(struct PPU* ppu);
+int tickPPU(struct PPU* ppu);
 
 #endif // _PPU_H_

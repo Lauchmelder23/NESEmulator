@@ -16,6 +16,8 @@ struct Bus
 	struct CPU* cpu;
 	struct PPU* ppu;
 	struct Cartridge* cartridge;
+
+	Byte masterClockTimer;
 };
 
 // Sets up the Bus, allocates memory and creates devices
@@ -30,6 +32,8 @@ void writeBus(struct Bus* bus, Word addr, Byte val);
 
 
 // Ticks the master clock 12 times (i.e. 1 CPU tick & 3 PPU dots)
-void tick(struct Bus* bus);
+int tick(struct Bus* bus);
+int doInstruction(struct Bus* bus);
+int doFrame(struct Bus* bus);
 
 #endif // _BUS_H_

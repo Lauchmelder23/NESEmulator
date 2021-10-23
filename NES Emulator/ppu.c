@@ -76,8 +76,10 @@ void destroyPPU(struct PPU* ppu)
 {
 	free(ppu->oam);
 	free(ppu->paletteIndexes);
-	free(ppu->nametables);
-	free(ppu->patternTables);
+	for(int i = 0; i < 4; i++)
+		free(ppu->nametables[i]);
+	for (int i = 0; i < 2; i++)
+		free(ppu->patternTables[i]);
 
 	free(ppu);
 }
@@ -152,7 +154,7 @@ void ppuWrite(struct PPU* ppu, Word addr, Byte val)
 	}
 }
 
-void tickPPU(struct PPU* ppu)
+int tickPPU(struct PPU* ppu)
 {
 	ppu->x++;
 
@@ -164,4 +166,6 @@ void tickPPU(struct PPU* ppu)
 		if (ppu->y == 261)
 			ppu->y = 0;
 	}
+
+	return (ppu->x == 0 && ppu->y == 0);
 }

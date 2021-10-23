@@ -2,6 +2,9 @@
 
 add_executable (nesemu "main.c"  "cpu.h" "types.h" "bus.h" "bus.c" "cartridge.h" "cpu.c" "cartridge.c" "opcodes.c" "log.c" "ppu.h" "ppu.c")
 
+target_include_directories(nesemu PUBLIC SDL2-static)
+target_link_libraries(nesemu PUBLIC SDL2-static SDL2main)
+
 if(MSVC)
 target_compile_definitions(nesemu PUBLIC _CRT_SECURE_NO_WARNINGS)
 endif()
