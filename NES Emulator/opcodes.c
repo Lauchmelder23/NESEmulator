@@ -177,7 +177,7 @@ const struct Opcode OPCODE_TABLE[256] =
 	/* A0 */	NEW_OPCODE(LDY, IMM,	 2, 2, 0),
 	/* A1 */	NEW_OPCODE(LDA, INDX,	 6, 2, 0),
 	/* A2 */	NEW_OPCODE(LDX, IMM,	 2, 2, 0),
-	/* A3 */	NEW_OPCODE(LAX, INDX,	 0, 1, 1),
+	/* A3 */	NEW_OPCODE(LAX, INDX,	 6, 2, 1),
 	/* A4 */	NEW_OPCODE(LDY, ZPG,	 3, 2, 0),
 	/* A5 */	NEW_OPCODE(LDA, ZPG,	 3, 2, 0),
 	/* A6 */	NEW_OPCODE(LDX, ZPG,	 3, 2, 0),

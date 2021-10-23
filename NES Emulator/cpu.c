@@ -462,6 +462,15 @@ void execute(struct CPU* cpu)
 		cpu->pc.word = cpu->fetchedAddress;
 	} break;
 
+	case LAX:
+	{
+		cpu->acc = cpu->fetchedVal;
+		cpu->x = cpu->fetchedVal;
+
+		cpu->status.negative = ((cpu->acc & 0x80) == 0x80);
+		cpu->status.zero = (cpu->acc  == 0x00);
+	} break;
+
 	case LDA:
 	{
 		cpu->acc = cpu->fetchedVal;
