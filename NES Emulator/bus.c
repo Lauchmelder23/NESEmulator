@@ -4,6 +4,7 @@
 #include <memory.h>
 
 #include "cpu.h"
+#include "ppu.h"
 #include "cartridge.h"
 
 struct Bus* createBus()
@@ -35,6 +36,9 @@ struct Bus* createBus()
 	// Create CPU and attach it
 	bus->cpu = createCPU(bus);
 
+	// Create PPU and attack it
+	bus->ppu = createPPU(bus);
+
 	// Create and insert cartridge
 	bus->cartridge = createCartridge(bus, "roms/nestest.nes");
 
@@ -46,6 +50,7 @@ struct Bus* createBus()
 void destroyBus(struct Bus* bus)
 {
 	destroyCartridge(bus->cartridge);
+	destroyPPU(bus->ppu);
 	destroyCPU(bus->cpu);
 	
 	free(bus->io);
@@ -104,5 +109,8 @@ void writeBus(struct Bus* bus, Word addr, Byte val)
 
 void tick(struct Bus* bus)
 {
-	tickInstr(bus->cpu);
+	for (int i = 0; i < 3; i++)
+		tickPPU(bus->ppu);
+
+	tickCPU(bus->cpu);
 }

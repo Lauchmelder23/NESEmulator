@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "bus.h"
 #include "cpu.h"
+#include "ppu.h"
 
 void logBusState(struct Bus* bus)
 {
@@ -40,5 +41,11 @@ void logBusState(struct Bus* bus)
 
 	printf("%-28s", buffer);
 
-	printf("A:%02X X:%02X Y:%02X SP:%02X P:%02X CYC:%zu\n", bus->cpu->acc, bus->cpu->x, bus->cpu->y, bus->cpu->sp, bus->cpu->status.raw, bus->cpu->totalCycles);
+	printf("A:%02X X:%02X Y:%02X SP:%02X P:%02X PPU:%3d,%3d CYC:%zu\n", 
+		bus->cpu->acc, 
+		bus->cpu->x, bus->cpu->y, 
+		bus->cpu->sp, 
+		bus->cpu->status.raw, 
+		bus->ppu->y, bus->ppu->x,
+		bus->cpu->totalCycles);
 }

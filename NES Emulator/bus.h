@@ -4,6 +4,7 @@
 #include "types.h"
 
 struct CPU;
+struct PPU;
 struct Cartridge;
 
 // Main communication path for devices and memory in the NES
@@ -13,6 +14,7 @@ struct Bus
 	Byte* io;
 
 	struct CPU* cpu;
+	struct PPU* ppu;
 	struct Cartridge* cartridge;
 };
 
