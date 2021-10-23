@@ -33,14 +33,14 @@ struct Bus* createBus()
 	}
 	memset(bus->ram, 0x00, 0x18);
 
+	// Create and insert cartridge
+	bus->cartridge = createCartridge(bus, "roms/nestest.nes");
+
 	// Create CPU and attach it
 	bus->cpu = createCPU(bus);
 
 	// Create PPU and attack it
 	bus->ppu = createPPU(bus);
-
-	// Create and insert cartridge
-	bus->cartridge = createCartridge(bus, "roms/nestest.nes");
 
 	printf("Reset vector: $%x\n", ((Word)readCartridge(bus->cartridge, 0xFFFD) << 8) | (readCartridge(bus->cartridge, 0xFFFC)));
 
@@ -49,9 +49,9 @@ struct Bus* createBus()
 
 void destroyBus(struct Bus* bus)
 {
-	destroyCartridge(bus->cartridge);
 	destroyPPU(bus->ppu);
 	destroyCPU(bus->cpu);
+	destroyCartridge(bus->cartridge);
 	
 	free(bus->io);
 	free(bus->ram);
@@ -66,6 +66,10 @@ Byte readBus(struct Bus* bus, Word addr)
 	if (addr <= 0x1FFF)	// RAM (or one of the mirrored addresses)
 	{
 		val = bus->ram[addr & 0x7FF];
+	}
+	else if (0x2000 <= addr && addr < 0x4000)
+	{
+		val = ppuRead(bus->ppu, addr & 0x2007);
 	}
 	else if (0x4000 <= addr && addr <= 0x4017)	// I/O space
 	{
@@ -90,6 +94,10 @@ void writeBus(struct Bus* bus, Word addr, Byte val)
 	if (addr <= 0x1FFF)	// RAM (or one of the mirrored addresses)
 	{
 		bus->ram[addr & 0x7FF] = val;
+	}
+	else if (0x2000 <= addr && addr < 0x4000)
+	{
+		ppuWrite(bus->ppu, addr & 0x2007, val);
 	}
 	else if (0x4000 <= addr && addr <= 0x4017)	// I/O space
 	{

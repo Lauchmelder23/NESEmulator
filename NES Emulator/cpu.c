@@ -25,7 +25,8 @@ struct CPU* createCPU(struct Bus* parent)
 	}
 
 	// TODO: THIS IS JUST FOR THE TEST ROM
-	cpu->pc.word = 0xC000;
+	// cpu->pc.word = 0xC000;
+	cpu->pc.word = ((Word)readBus(parent, 0xFFFD) << 8) | readBus(parent, 0xFFFC);
 
 	cpu->status.raw = 0x34;
 	cpu->acc = 0;

@@ -54,12 +54,17 @@ struct PPU* createPPU(struct Bus* parent)
 		exit(1);
 	}
 
-	ppu->ppuctrl.raw = 0b00000000;
-	ppu->ppumask.raw = 0b00000000;
-	ppu->ppustatus.raw = 0b10100000;
+	ppu->ppuCtrl.raw = 0b00000000;
+	ppu->ppuMask.raw = 0b00000000;
+	ppu->ppuStatus.raw = 0b10100000;
 	ppu->oamaddr = 0x00;
-	ppu->ppuAddr = 0x00;
-	ppu->ppuData = 0x00;
+
+	ppu->scrollX = 0;
+	ppu->scrollY = 0;
+	ppu->scrollWriteTarget = 0;
+
+	ppu->ppuAddress.raw = 0x00;
+	ppu->ppuAddressWriteTarget = 0;
 
 	ppu->x = 0;
 	ppu->y = 0;
@@ -79,11 +84,72 @@ void destroyPPU(struct PPU* ppu)
 
 Byte ppuRead(struct PPU* ppu, Word addr)
 {
-	return 0x00;
+	Byte val = 0x00;
+	switch (addr)
+	{
+	case 0x2000:
+		break;
+
+	case 0x2001:
+		break;
+
+	case 0x2002:
+		val = ppu->ppuStatus.raw;
+		break;
+
+	case 0x2005:
+		break;
+
+	case 0x2006:
+		break;
+
+	case 0x2007:
+		val = ppu->nametables[ppu->ppuAddress.raw & 0x2000][ppu->ppuAddress.raw & 0x1FFF];
+		ppu->ppuAddress.raw += ppu->ppuCtrl.increment;
+		break;
+
+	default:
+		fprintf(stderr, "Read access violation at PPU register $%04X", addr);
+		exit(1);
+	}
+
+	return val;
 }
 
 void ppuWrite(struct PPU* ppu, Word addr, Byte val)
 {
+	switch (addr)
+	{
+	case 0x2000:
+		ppu->ppuCtrl.raw = val;
+		break;
+
+	case 0x2001:
+		ppu->ppuMask.raw = val;
+		break;
+
+	case 0x2002:
+		break;
+
+	case 0x2005:
+		*((&ppu->scrollX) + ppu->scrollWriteTarget) = val;
+		ppu->scrollWriteTarget = 1 - ppu->scrollWriteTarget;
+		break;
+
+	case 0x2006:
+		*((&ppu->ppuAddress.lo) + ppu->ppuAddressWriteTarget) = val;
+		ppu->ppuAddressWriteTarget = 1 - ppu->ppuAddressWriteTarget;
+		break;
+
+	case 0x2007:
+		ppu->nametables[ppu->ppuAddress.raw & 0x2000][ppu->ppuAddress.raw & 0x1FFF] = val;
+		ppu->ppuAddress.raw += ppu->ppuCtrl.increment;
+		break;
+
+	default:
+		fprintf(stderr, "Write access violation at PPU register: $%04X", addr);
+		exit(1);
+	}
 }
 
 void tickPPU(struct PPU* ppu)

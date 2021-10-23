@@ -23,7 +23,7 @@ struct PPU
 
 		Byte raw;
 
-	} ppuctrl;
+	} ppuCtrl;
 
 	union
 	{
@@ -39,7 +39,7 @@ struct PPU
 
 		Byte raw;
 
-	} ppumask;
+	} ppuMask;
 
 	union
 	{
@@ -53,13 +53,26 @@ struct PPU
 
 		Byte raw;
 
-	} ppustatus;
+	} ppuStatus;
 
 	Byte oamaddr;
 	Byte oamdata;
-	Byte ppuScroll;
-	Byte ppuAddr;
-	Byte ppuData;
+
+	Byte scrollX, scrollY;
+	Byte scrollWriteTarget;
+
+	union
+	{
+		struct
+		{
+			Byte lo;
+			Byte hi;
+		};
+
+		Word raw;
+	} ppuAddress;
+	Byte ppuAddressWriteTarget;
+
 	Byte oamdma;
 
 	Byte* patternTables[2];
@@ -80,6 +93,8 @@ struct PPU
 	}* oam;
 
 	Word x, y;
+
+
 
 	struct Bus* bus;
 };

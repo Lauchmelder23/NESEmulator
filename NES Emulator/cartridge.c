@@ -85,7 +85,7 @@ Byte readCartridge(struct Cartridge* cartridge, Word addr)
 	}
 	else if (0x8000 <= addr && addr <= 0xFFFF)	// PRG ROM
 	{
-		val = cartridge->prg_rom[addr & 0x3FFF];
+		val = cartridge->prg_rom[addr % 0x4000];
 	}
 
 	return val;
@@ -101,7 +101,7 @@ void writeCartridge(struct Cartridge* cartridge, Word addr, Byte val)
 	}
 	else if (0x8000 <= addr && addr <= 0xFFFF)	// PRG ROM
 	{
-		cartridge->prg_rom[addr & 0x1FFF] = val;
+		cartridge->prg_rom[addr % 0x4000] = val;
 	}
 
 }
