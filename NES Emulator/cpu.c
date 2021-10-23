@@ -403,7 +403,7 @@ void execute(struct CPU* cpu)
 		cpu->x--;
 
 		cpu->status.negative = ((cpu->x & 0x80) == 0x80);
-		cpu->status.zero = (cpu->x == 0x80);
+		cpu->status.zero = (cpu->x == 0x00);
 	} break;
 
 	case DEY:

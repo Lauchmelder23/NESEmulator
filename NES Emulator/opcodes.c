@@ -269,9 +269,9 @@ const struct Opcode OPCODE_TABLE[256] =
 	/* F7 */	NEW_OPCODE(ISC, ZPX,	 6, 2, 1),
 	/* F8 */	NEW_OPCODE(SED, IMP,	 2, 1, 0),
 	/* F9 */	NEW_OPCODE(SBC, ABY,	 4, 3, 0),
-	/* FA */	NEW_OPCODE(SBC, ABY,	 4, 3, 1),
-	/* FB */	NEW_OPCODE(NOP, IMP,	 2, 1, 1),
+	/* FA */	NEW_OPCODE(NOP, IMP,	 2, 1, 1),
 	/* FC */	NEW_OPCODE(ISC, ABY,	 7, 3, 1),
+	/* FB */	NEW_OPCODE(NOP, ABX,	 4, 3, 1),
 	/* FD */	NEW_OPCODE(SBC, ABX,	 4, 3, 0),
 	/* FE */	NEW_OPCODE(INC, ABX,	 7, 3, 0),
 	/* FF */	NEW_OPCODE(ISC, ABX,	 7, 3, 1)

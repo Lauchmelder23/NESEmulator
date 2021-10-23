@@ -19,7 +19,7 @@ void logBusState(struct Bus* bus)
 		sprintf(buffer + 3 * i, "%02X ", instructionBytes[i]);
 	}
 
-	printf("%-10s%s ", buffer, bus->cpu->currentOpcode->str);
+	printf("%-9s%c%s ", buffer, (bus->cpu->currentOpcode->illegal ? '*' : ' '), bus->cpu->currentOpcode->str);
 
 	switch (bus->cpu->currentOpcode->addr)
 	{
@@ -32,7 +32,7 @@ void logBusState(struct Bus* bus)
 	case IND: sprintf(buffer, "($%04X) -> $%04X",		(instructionBytes[2] << 8) | instructionBytes[1], bus->cpu->fetchedAddress); break;
 	case INDX: sprintf(buffer, "($%02X, X) -> $%04X",	instructionBytes[1], bus->cpu->fetchedAddress); break;
 	case INDY: sprintf(buffer, "($%02X), Y -> $%04X",	instructionBytes[1], bus->cpu->fetchedAddress); break;
-	case REL: sprintf(buffer, "$%02X",					bus->cpu->fetchedRelAddress); break;
+	case REL: sprintf(buffer, "$%02X",					(Byte)bus->cpu->fetchedRelAddress); break;
 	case ZPG: sprintf(buffer, "$%02X",					bus->cpu->fetchedAddress); break;
 	case ZPX: sprintf(buffer, "$%02X, X -> $%02X",		instructionBytes[1], bus->cpu->fetchedAddress); break;
 	case ZPY: sprintf(buffer, "$%02X, Y -> $%02X",		instructionBytes[1], bus->cpu->fetchedAddress); break;
