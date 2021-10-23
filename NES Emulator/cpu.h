@@ -16,7 +16,9 @@ enum Operation
 	ROR, RTI, RTS, SBC, SEC, SED, SEI, STA,
 	STX, STY, TAX, TAY, TSX, TXA, TXS, TYA,
 
-	JAM, SLO, ANC
+	ANC, ASR, ARR, DCP, ISC, ISX, JAM, LAS, 
+	LAX, RLA, RRA, SAX, SBX, SLO, SHA, SHS, 
+	SHX, SHY, SRE, XAA
 };
 
 enum AddrMode
