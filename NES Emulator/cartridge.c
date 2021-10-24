@@ -4,33 +4,6 @@
 
 #include "bus.h"
 
-struct INES_Header
-{
-	Byte nestext[4];
-	Byte prg_rom_size;
-	Byte chr_rom_size;
-	
-	struct
-	{
-		Byte mirror : 1;
-		Byte battery : 1;
-		Byte trainer : 1;
-		Byte ignore_mirror : 1;
-		Byte mapper_lower_nibble : 4;
-	} Flags6;
-
-	struct
-	{
-		Byte vs : 1;
-		Byte playchoice : 1;
-		Byte nes20 : 2;
-		Byte mapper_upper_nibble : 4;
-	} Flags7;
-
-	Byte prg_ram_size;
-	Byte unused[7];
-};
-
 struct Cartridge* createCartridge(struct Bus* parent, const char* filepath)
 {
 	struct Cartridge* cartridge = (struct Cartridge*)malloc(sizeof(struct Cartridge));
@@ -42,25 +15,24 @@ struct Cartridge* createCartridge(struct Bus* parent, const char* filepath)
 
 	FILE* fp = fopen(filepath, "rb");
 	
-	struct INES_Header header;
-	fread(&header, sizeof(header), 1, fp);
+	fread(&cartridge->header, sizeof(cartridge->header), 1, fp);
 
-	cartridge->prg_rom = (Byte*)malloc(0x4000 * (size_t)header.prg_rom_size);
+	cartridge->prg_rom = (Byte*)malloc(0x4000 * (size_t)cartridge->header.prg_rom_size);
 	if (cartridge->prg_rom == NULL)
 	{
 		fprintf(stderr, "Failed to allocate PRG memory for cartridge, aborting.\n");
 		exit(1);
 	}
 
-	cartridge->chr_rom = (Byte*)malloc(0x2000 * (size_t)header.chr_rom_size);
+	cartridge->chr_rom = (Byte*)malloc(0x2000 * (size_t)cartridge->header.chr_rom_size);
 	if (cartridge->chr_rom == NULL)
 	{
 		fprintf(stderr, "Failed to allocate CHR memory for cartridge, aborting.\n");
 		exit(1);
 	}
 
-	fread(cartridge->prg_rom, 0x4000, header.prg_rom_size, fp);
-	fread(cartridge->chr_rom, 0x2000, header.chr_rom_size, fp);
+	fread(cartridge->prg_rom, 0x4000, cartridge->header.prg_rom_size, fp);
+	fread(cartridge->chr_rom, 0x2000, cartridge->header.chr_rom_size, fp);
 
 	cartridge->bus = parent;
 	return cartridge;

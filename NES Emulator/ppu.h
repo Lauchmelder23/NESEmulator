@@ -77,7 +77,12 @@ struct PPU
 	Byte oamdma;
 
 	Byte* patternTables[2];
-	Byte* nametables[4];
+	SDL_Texture* patternTableTextures[2];
+
+	Byte* nameTables[2];
+	SDL_Texture* nameTableTextures[2];
+	Byte mirroring;
+
 	Byte* paletteIndexes;
 
 	union
@@ -105,5 +110,8 @@ Byte ppuRead(struct PPU* ppu, Word addr);
 void ppuWrite(struct PPU* ppu, Word addr, Byte val);
 
 int tickPPU(struct PPU* ppu);
+
+SDL_Texture* getPatternTableTexture(struct PPU* ppu, int index);
+SDL_Texture* getNameTableTexture(struct PPU* ppu, int index);
 
 #endif // _PPU_H_

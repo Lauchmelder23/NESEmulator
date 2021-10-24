@@ -7,6 +7,33 @@ struct Bus;
 
 struct Cartridge
 {
+	struct
+	{
+		Byte nestext[4];
+		Byte prg_rom_size;
+		Byte chr_rom_size;
+
+		struct
+		{
+			Byte mirror : 1;
+			Byte battery : 1;
+			Byte trainer : 1;
+			Byte ignore_mirror : 1;
+			Byte mapper_lower_nibble : 4;
+		} Flags6;
+
+		struct
+		{
+			Byte vs : 1;
+			Byte playchoice : 1;
+			Byte nes20 : 2;
+			Byte mapper_upper_nibble : 4;
+		} Flags7;
+
+		Byte prg_ram_size;
+		Byte unused[7];
+	} header;
+
 	Byte* prg_rom;
 	Byte* chr_rom;
 

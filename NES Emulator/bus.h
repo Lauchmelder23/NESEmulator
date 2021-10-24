@@ -2,6 +2,7 @@
 #define _BUS_H_
 
 #include "types.h"
+#include <SDL.h>
 
 struct CPU;
 struct PPU;
@@ -18,10 +19,12 @@ struct Bus
 	struct Cartridge* cartridge;
 
 	Byte masterClockTimer;
+
+	SDL_Renderer* screen;
 };
 
 // Sets up the Bus, allocates memory and creates devices
-struct Bus* createBus();
+struct Bus* createBus(SDL_Renderer* renderer);
 
 // Destroys the bus, cleans up memory and destroys devices on the Bus
 void destroyBus(struct Bus* bus);

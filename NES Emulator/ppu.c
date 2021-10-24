@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <memory.h>
 #include "bus.h"
+#include "cartridge.h"
 
 struct PPU* createPPU(struct Bus* parent)
 {
@@ -16,29 +17,39 @@ struct PPU* createPPU(struct Bus* parent)
 
 	ppu->bus = parent;
 
+
+
+	ppu->patternTables[0] = (Byte*)malloc(0x1000 * 2);
+	if (ppu->patternTables[0] == NULL)
+	{
+		fprintf(stderr, "Failed to allocate memory for PPU pattern tables.\n");
+		exit(1);
+	}
+	memset(ppu->patternTables[0], 0, 0x1000 * 2);
+
 	for (int i = 0; i < 2; i++)
 	{
-		ppu->patternTables[i] = (Byte*)malloc(0x1000);
-		if (ppu->patternTables[i] == NULL)
-		{
-			fprintf(stderr, "Failed to allocate memory for PPU pattern table #%d object.\n", i);
-			exit(1);
-		}
-
-		memset(ppu->patternTables[i], 0, 0x1000);
+		ppu->patternTables[i] = ppu->patternTables[0] + ((size_t)0x1000 * i);
+		ppu->patternTableTextures[i] = SDL_CreateTexture(parent->screen, SDL_PIXELFORMAT_RGB332, SDL_TEXTUREACCESS_STREAMING, 64, 64);
 	}
 
-	for (int i = 0; i < 4; i++)
+
+
+	ppu->nameTables[0] = (Byte*)malloc(0x0400 * 2);
+	if (ppu->nameTables[0] == NULL)
 	{
-		ppu->nametables[i] = (Byte*)malloc(0x0400);
-		if (ppu->nametables[i] == NULL)
-		{
-			fprintf(stderr, "Failed to allocate memory for PPU nametable #%d object.\n", i);
-			exit(1);
-		}
-
-		memset(ppu->nametables[i], 0, 0x0400);
+		fprintf(stderr, "Failed to allocate memory for PPU nameTables.\n");
+		exit(1);
 	}
+	memset(ppu->nameTables[0], 0, 0x0400 * 2);
+
+	for (int i = 0; i < 2; i++)
+	{
+		ppu->nameTables[i] = ppu->nameTables[0] + ((size_t)0x0400 * i);
+		ppu->nameTableTextures[i] = SDL_CreateTexture(parent->screen, SDL_PIXELFORMAT_RGB332, SDL_TEXTUREACCESS_STREAMING, 32, 32);
+	}
+
+
 
 	ppu->paletteIndexes = (Byte*)malloc(0x20);
 	if (ppu->paletteIndexes == NULL)
@@ -47,12 +58,17 @@ struct PPU* createPPU(struct Bus* parent)
 		exit(1);
 	}
 
+
+
 	ppu->oam = (Byte*)malloc(0x100);
 	if (ppu->oam == NULL)
 	{
 		fprintf(stderr, "Failed to allocate memory for PPU OAM.\n");
 		exit(1);
 	}
+
+
+	ppu->mirroring = parent->cartridge->header.Flags6.mirror;
 
 	ppu->ppuCtrl.raw = 0b00000000;
 	ppu->ppuMask.raw = 0b00000000;
@@ -64,7 +80,7 @@ struct PPU* createPPU(struct Bus* parent)
 	ppu->scrollWriteTarget = 0;
 
 	ppu->ppuAddress.raw = 0x00;
-	ppu->ppuAddressWriteTarget = 0;
+	ppu->ppuAddressWriteTarget = 1;
 
 	ppu->x = 0;
 	ppu->y = 0;
@@ -76,10 +92,14 @@ void destroyPPU(struct PPU* ppu)
 {
 	free(ppu->oam);
 	free(ppu->paletteIndexes);
-	for(int i = 0; i < 4; i++)
-		free(ppu->nametables[i]);
+
 	for (int i = 0; i < 2; i++)
-		free(ppu->patternTables[i]);
+		SDL_DestroyTexture(ppu->nameTableTextures[i]);
+	free(ppu->nameTables[0]);
+
+	for (int i = 0; i < 2; i++)
+		SDL_DestroyTexture(ppu->patternTableTextures[i]);
+	free(ppu->patternTables[0]);
 
 	free(ppu);
 }
@@ -106,8 +126,31 @@ Byte ppuRead(struct PPU* ppu, Word addr)
 		break;
 
 	case 0x2007:
-		val = ppu->nametables[ppu->ppuAddress.raw & 0x2000][ppu->ppuAddress.raw & 0x1FFF];
+	{
+		if (ppu->ppuAddress.raw < 0x2000)
+		{
+			val = ppu->patternTables[0][ppu->ppuAddress.raw];
+		}
+		else if (0x2000 <= ppu->ppuAddress.raw && ppu->ppuAddress.raw < 0x3F00)
+		{
+			Word effectiveAddress = ppu->ppuAddress.raw;
+			effectiveAddress &= ~(0x0400 + ppu->mirroring * 0x0400);
+			if (effectiveAddress >= 0x2800)
+				effectiveAddress -= 0x0400;
+
+			val = ppu->nameTables[0][(effectiveAddress - 0x2000) & 0x0FFF];
+		}
+		else if (0x3F00 <= ppu->ppuAddress.raw && ppu->ppuAddress.raw < 0x4000)
+		{
+			val = ppu->paletteIndexes[(ppu->ppuAddress.raw - 0x3F00) & 0x1F];
+		}
+		else
+		{
+			fprintf(stderr, "PPU access violation at $%04X", ppu->ppuAddress.raw);
+			exit(1);
+		}
 		ppu->ppuAddress.raw += ppu->ppuCtrl.increment;
+	}
 		break;
 
 	default:
@@ -144,9 +187,32 @@ void ppuWrite(struct PPU* ppu, Word addr, Byte val)
 		break;
 
 	case 0x2007:
-		ppu->nametables[ppu->ppuAddress.raw & 0x2000][ppu->ppuAddress.raw & 0x1FFF] = val;
-		ppu->ppuAddress.raw += ppu->ppuCtrl.increment;
+	{
+		if (ppu->ppuAddress.raw < 0x2000)
+		{
+			ppu->patternTables[0][ppu->ppuAddress.raw] = val;
+		}
+		else if(0x2000 <= ppu->ppuAddress.raw && ppu->ppuAddress.raw < 0x3F00)
+		{
+			Word effectiveAddress = ppu->ppuAddress.raw;
+			effectiveAddress &= ~(0x0400 + ppu->mirroring * 0x0400);
+			if (effectiveAddress >= 0x2800)
+				effectiveAddress -= 0x0400;
+
+			ppu->nameTables[0][(effectiveAddress - 0x2000) & 0x0FFF] = val;
+		}
+		else if (0x3F00 <= ppu->ppuAddress.raw && ppu->ppuAddress.raw < 0x4000)
+		{
+			ppu->paletteIndexes[(ppu->ppuAddress.raw - 0x3F00) & 0x1F] = val;
+		}
+		else
+		{
+			fprintf(stderr, "PPU access violation at $%04X", ppu->ppuAddress.raw);
+			exit(1);
+		}
+		ppu->ppuAddress.raw += (ppu->ppuCtrl.increment == 0 ? 1 : 32);
 		break;
+	}
 
 	default:
 		fprintf(stderr, "Write access violation at PPU register: $%04X", addr);
@@ -168,4 +234,26 @@ int tickPPU(struct PPU* ppu)
 	}
 
 	return (ppu->x == 0 && ppu->y == 0);
+}
+
+SDL_Texture* getPatternTableTexture(struct PPU* ppu, int index)
+{
+	SDL_Texture* target = ppu->patternTableTextures[index];
+	int pitch;
+	void* pixels;
+	SDL_LockTexture(target, NULL, &pixels, &pitch);
+	SDL_memcpy(pixels, ppu->patternTables[index], 0x1000);
+	SDL_UnlockTexture(target);
+	return target;
+}
+
+SDL_Texture* getNameTableTexture(struct PPU* ppu, int index)
+{
+	SDL_Texture* target = ppu->nameTableTextures[index];
+	int pitch;
+	void* pixels;
+	SDL_LockTexture(target, NULL, &pixels, &pitch);
+	SDL_memcpy(pixels, ppu->nameTables[index], 0x0400);
+	SDL_UnlockTexture(target);
+	return target;
 }

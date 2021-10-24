@@ -189,7 +189,7 @@ void fetch(struct CPU* cpu)
 
 void execute(struct CPU* cpu)
 {
-	// LOG_BUS(cpu->bus);
+	LOG_BUS(cpu->bus);
 
 	switch (cpu->currentOpcode->op)
 	{
@@ -425,7 +425,7 @@ void execute(struct CPU* cpu)
 		cpu->y--;
 
 		cpu->status.negative = ((cpu->y & 0x80) == 0x80);
-		cpu->status.zero = (cpu->y == 0x80);
+		cpu->status.zero = (cpu->y == 0x00);
 	} break;
 
 	case EOR:

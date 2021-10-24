@@ -7,7 +7,7 @@
 #include "ppu.h"
 #include "cartridge.h"
 
-struct Bus* createBus()
+struct Bus* createBus(SDL_Renderer* renderer)
 {
 	struct Bus* bus = (struct Bus*)malloc(sizeof(struct Bus));
 	if (bus == NULL)
@@ -40,6 +40,7 @@ struct Bus* createBus()
 	bus->cpu = createCPU(bus);
 
 	// Create PPU and attack it
+	bus->screen = renderer;
 	bus->ppu = createPPU(bus);
 
 	bus->masterClockTimer = 0;
