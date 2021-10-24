@@ -37,6 +37,9 @@ struct CPU* createCPU(struct Bus* parent)
 	cpu->remainingCycles = 7;
 	cpu->totalCycles = 0;
 
+	cpu->irq = 0;
+	cpu->nmi = 0;
+
 	cpu->bus = parent;
 	return cpu;
 }
@@ -53,6 +56,40 @@ int tickCPU(struct CPU* cpu)
 
 	cpu->remainingCycles--;
 	cpu->totalCycles += 1;
+
+	if (cpu->remainingCycles == 1)
+	{
+		// Handle interrupts
+		if (cpu->nmi)
+		{
+			Push(cpu->bus, cpu->pc.hi);
+			Push(cpu->bus, cpu->pc.lo);
+			Push(cpu->bus, cpu->status.raw & 0b11101111);
+
+			cpu->nmi = 0;
+
+			cpu->pc.lo = readBus(cpu->bus, 0xFFFA);
+			cpu->pc.hi = readBus(cpu->bus, 0xFFFB);
+
+			return 0;
+		}
+
+		if (!cpu->status.id)
+		{
+			if (cpu->irq)
+			{
+				Push(cpu->bus, cpu->pc.hi);
+				Push(cpu->bus, cpu->pc.lo);
+				Push(cpu->bus, cpu->status.raw & 0b11101111);
+
+				cpu->status.id = 1;
+				cpu->pc.lo = readBus(cpu->bus, 0xFFFE);
+				cpu->pc.hi = readBus(cpu->bus, 0xFFFF);
+
+				cpu->irq = 0;
+			}
+		}
+	}
 
 	if (cpu->remainingCycles == 0)
 	{
@@ -189,7 +226,7 @@ void fetch(struct CPU* cpu)
 
 void execute(struct CPU* cpu)
 {
-	LOG_BUS(cpu->bus);
+	// LOG_BUS(cpu->bus);
 
 	switch (cpu->currentOpcode->op)
 	{
@@ -794,4 +831,14 @@ void execute(struct CPU* cpu)
 		exit(1);
 		break;
 	}
+}
+
+void IRQ(struct CPU* cpu)
+{
+	cpu->irq = 1;
+}
+
+void NMI(struct CPU* cpu)
+{
+	cpu->nmi = 1;
 }

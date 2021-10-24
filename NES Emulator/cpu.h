@@ -80,6 +80,9 @@ struct CPU
 	Word fetchedAddress;
 	char fetchedRelAddress;
 
+	Byte irq;
+	Byte nmi;
+
 	const struct Opcode* currentOpcode;
 
 	struct Bus* bus;
@@ -93,5 +96,8 @@ void tickInstr(struct CPU* cpu);
 
 void fetch(struct CPU* cpu);
 void execute(struct CPU* cpu);
+
+void IRQ(struct CPU* cpu);
+void NMI(struct CPU* cpu);
 
 #endif // _CPU_H_

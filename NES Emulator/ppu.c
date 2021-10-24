@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <memory.h>
 #include "bus.h"
+#include "cpu.h"
 #include "cartridge.h"
 
 struct PPU* createPPU(struct Bus* parent)
@@ -222,6 +223,11 @@ void ppuWrite(struct PPU* ppu, Word addr, Byte val)
 
 int tickPPU(struct PPU* ppu)
 {
+	// Do stuff
+	if (ppu->x == 0 && ppu->y == 241)
+		NMI(ppu->bus->cpu);
+
+	// Increment counters
 	ppu->x++;
 
 	if (ppu->x == 341)
