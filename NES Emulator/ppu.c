@@ -18,24 +18,6 @@ struct PPU* createPPU(struct Bus* parent)
 
 	ppu->bus = parent;
 
-
-
-	ppu->patternTables[0] = (Byte*)malloc(0x1000 * 2);
-	if (ppu->patternTables[0] == NULL)
-	{
-		fprintf(stderr, "Failed to allocate memory for PPU pattern tables.\n");
-		exit(1);
-	}
-	memset(ppu->patternTables[0], 0, 0x1000 * 2);
-
-	for (int i = 0; i < 2; i++)
-	{
-		ppu->patternTables[i] = ppu->patternTables[0] + ((size_t)0x1000 * i);
-		ppu->patternTableTextures[i] = SDL_CreateTexture(parent->screen, SDL_PIXELFORMAT_RGB332, SDL_TEXTUREACCESS_STREAMING, 64, 64);
-	}
-
-
-
 	ppu->nameTables[0] = (Byte*)malloc(0x0400 * 2);
 	if (ppu->nameTables[0] == NULL)
 	{
@@ -68,6 +50,13 @@ struct PPU* createPPU(struct Bus* parent)
 		exit(1);
 	}
 
+	ppu->pixels = (struct Pixel*)malloc(256 * 240 * sizeof(struct Pixel));
+	ppu->screen = SDL_CreateTexture(parent->screen, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 256, 240);
+	if (ppu->screen == NULL)
+	{
+		fprintf(stderr, "Failed to create output screen texture\n");
+		exit(1);
+	}
 
 	ppu->mirroring = parent->cartridge->header.Flags6.mirror;
 
@@ -83,6 +72,15 @@ struct PPU* createPPU(struct Bus* parent)
 	ppu->ppuAddress.raw = 0x00;
 	ppu->ppuAddressWriteTarget = 1;
 
+	ppu->nametablePos.x = 0;
+	ppu->nametablePos.y = 0;
+	ppu->tilePosY = 0;
+
+	ppu->verticalPhase = Visible;
+	ppu->horizontalPhase = Idle;
+	ppu->fetchingPhase = Nametable;
+	ppu->remainingCycles = 1;
+
 	ppu->x = 0;
 	ppu->y = 0;
 
@@ -97,10 +95,6 @@ void destroyPPU(struct PPU* ppu)
 	for (int i = 0; i < 2; i++)
 		SDL_DestroyTexture(ppu->nameTableTextures[i]);
 	free(ppu->nameTables[0]);
-
-	for (int i = 0; i < 2; i++)
-		SDL_DestroyTexture(ppu->patternTableTextures[i]);
-	free(ppu->patternTables[0]);
 
 	free(ppu);
 }
@@ -120,6 +114,9 @@ Byte ppuRead(struct PPU* ppu, Word addr)
 		val = ppu->ppuStatus.raw;
 		break;
 
+	case 0x2003:
+		break;
+
 	case 0x2005:
 		break;
 
@@ -130,7 +127,7 @@ Byte ppuRead(struct PPU* ppu, Word addr)
 	{
 		if (ppu->ppuAddress.raw < 0x2000)
 		{
-			val = ppu->patternTables[0][ppu->ppuAddress.raw];
+			val = readCartridgePPU(ppu->bus->cartridge, ppu->ppuAddress.raw);
 		}
 		else if (0x2000 <= ppu->ppuAddress.raw && ppu->ppuAddress.raw < 0x3F00)
 		{
@@ -155,8 +152,9 @@ Byte ppuRead(struct PPU* ppu, Word addr)
 		break;
 
 	default:
-		fprintf(stderr, "Read access violation at PPU register $%04X", addr);
-		exit(1);
+		// fprintf(stderr, "Read access violation at PPU register $%04X", addr);
+		// exit(1);
+		break;
 	}
 
 	return val;
@@ -191,7 +189,7 @@ void ppuWrite(struct PPU* ppu, Word addr, Byte val)
 	{
 		if (ppu->ppuAddress.raw < 0x2000)
 		{
-			ppu->patternTables[0][ppu->ppuAddress.raw] = val;
+			writeCartridgePPU(ppu->bus->cartridge, ppu->ppuAddress.raw, val);
 		}
 		else if(0x2000 <= ppu->ppuAddress.raw && ppu->ppuAddress.raw < 0x3F00)
 		{
@@ -216,41 +214,112 @@ void ppuWrite(struct PPU* ppu, Word addr, Byte val)
 	}
 
 	default:
-		fprintf(stderr, "Write access violation at PPU register: $%04X", addr);
-		exit(1);
+		//fprintf(stderr, "Write access violation at PPU register: $%04X", addr);
+		//exit(1);
+		break;
 	}
 }
 
 int tickPPU(struct PPU* ppu)
 {
 	// Do stuff
-	if (ppu->x == 0 && ppu->y == 241)
-		NMI(ppu->bus->cpu);
+	if(ppu->ppuStatus.vBlank)
+		if (ppu->x == 1 && ppu->y == 241)
+			NMI(ppu->bus->cpu);
+
+	switch (ppu->verticalPhase)
+	{
+	case PreRender:
+		break;
+
+	case Visible:
+	{
+		// Fetching
+		switch (ppu->horizontalPhase)
+		{
+		case Idle:
+			break;
+
+		case Fetching:
+			ppu->remainingCycles--;
+			if (ppu->remainingCycles == 0)
+			{
+				Byte tileY = ppu->y / 8;
+				Byte tileX = (ppu->x - 1) / 8 + 2;
+
+				switch (ppu->fetchingPhase)
+				{
+				case Nametable:
+				{
+					if (ppu->x != 1)
+					{
+						ppu->hiPatternFIFO.lo = ppu->tileData.tile.hi;
+						ppu->loPatternFIFO.lo = ppu->tileData.tile.lo;
+					}
+
+					ppu->tileData.nametable = ppu->nameTables[0][((size_t)0x2000 + (size_t)0x400 * ppu->ppuCtrl.nametable) + (size_t)0x20* tileY + tileX];
+					break;
+				}
+
+				case Attribute:
+				{
+					ppu->tileData.attribute = ppu->nameTables[0][0x3C0 + ((tileY >> 2) * 8) + (tileX >> 2)];
+					break;
+				}
+
+				case PatternLow:
+				{
+					ppu->tileData.tile.lo = readCartridgePPU(ppu->bus->cartridge, 0x1000 * ppu->ppuCtrl.bgTile + (ppu->tileData.nametable * 16) + (ppu->y % 8));
+					break;
+				}
+
+				case PatternHigh:
+				{
+					ppu->tileData.tile.hi = readCartridgePPU(ppu->bus->cartridge, 0x1000 * ppu->ppuCtrl.bgTile + (ppu->tileData.nametable * 16) + (ppu->y % 8) + 8);
+					break;
+				}
+				}
+
+				ppu->remainingCycles = 1;
+				ppu->fetchingPhase = (ppu->fetchingPhase + 1) % FetchingPhaseSize;
+			}
+
+			// Rendering (quick and dirty for now)
+			Byte color = ((ppu->hiPatternFIFO.hi & 0x80) >> 6) | ((ppu->loPatternFIFO.hi & 0x80) >> 7);
+			size_t index = (size_t)ppu->y * 256 + ppu->x - 1;
+			// printf("index %d,%d -> %d\n", ppu->y, ppu->x - 1, index);
+			ppu->pixels[index].r = 50 * color;
+			ppu->pixels[index].g = 50 * color;
+			ppu->pixels[index].b = 50 * color;
+
+			ppu->loPatternFIFO.data <<= 1;
+			ppu->hiPatternFIFO.data <<= 1;
+
+			break;
+		}
+	} break;
+	}
 
 	// Increment counters
 	ppu->x++;
-
+	
 	if (ppu->x == 341)
 	{
 		ppu->x = 0;
 		ppu->y++;
 
-		if (ppu->y == 261)
+		if (ppu->y == 262)
 			ppu->y = 0;
+
+		if (ppu->y == 261 || ppu->y == 0 || ppu->y == 240 || ppu->y == 241)
+			ppu->verticalPhase = (ppu->verticalPhase + 1) % VerticalPhaseSize;
 	}
 
-	return (ppu->x == 0 && ppu->y == 0);
-}
+	if (ppu->x == 0 || ppu->x == 1 || ppu->x == 257 || ppu->x == 321 || ppu->x == 337)
+		ppu->horizontalPhase = (ppu->horizontalPhase + 1) % HorizontalPhaseSize;
 
-SDL_Texture* getPatternTableTexture(struct PPU* ppu, int index)
-{
-	SDL_Texture* target = ppu->patternTableTextures[index];
-	int pitch;
-	void* pixels;
-	SDL_LockTexture(target, NULL, &pixels, &pitch);
-	SDL_memcpy(pixels, ppu->patternTables[index], 0x1000);
-	SDL_UnlockTexture(target);
-	return target;
+
+	return (ppu->x == 0 && ppu->y == 0);
 }
 
 SDL_Texture* getNameTableTexture(struct PPU* ppu, int index)
@@ -262,4 +331,15 @@ SDL_Texture* getNameTableTexture(struct PPU* ppu, int index)
 	SDL_memcpy(pixels, ppu->nameTables[index], 0x0400);
 	SDL_UnlockTexture(target);
 	return target;
+}
+
+SDL_Texture* getScreenTexture(struct PPU* ppu)
+{
+	void* pixels;
+	int stride;
+	SDL_LockTexture(ppu->screen, NULL, &pixels, &stride);
+	SDL_memcpy(pixels, ppu->pixels, 256 * 240 * sizeof(struct Pixel));
+	SDL_UnlockTexture(ppu->screen);
+
+	return ppu->screen;
 }

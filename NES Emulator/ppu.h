@@ -6,9 +6,32 @@
 
 struct Bus;
 
+struct Pixel
+{
+	Byte r;
+	Byte g;
+	Byte b;
+};
+
+struct FIFO16
+{
+	union 
+	{
+		struct
+		{
+			Byte lo;
+			Byte hi;
+		};
+
+		Word data;
+	};
+};
+
 struct PPU
 {
-	// REGISTERS
+	////////////////////////////////////////
+	///            REGISTERS             ///
+	////////////////////////////////////////
 	union
 	{
 		struct 
@@ -59,6 +82,9 @@ struct PPU
 	Byte oamaddr;
 	Byte oamdata;
 
+	////////////////////////////////////////
+	///         PSEUDO REGISTERS         ///
+	////////////////////////////////////////
 	Byte scrollX, scrollY;
 	Byte scrollWriteTarget;
 
@@ -76,14 +102,81 @@ struct PPU
 
 	Byte oamdma;
 
-	Byte* patternTables[2];
-	SDL_Texture* patternTableTextures[2];
+	////////////////////////////////////////
+	///              VRAM                ///
+	////////////////////////////////////////
 
 	Byte* nameTables[2];
 	SDL_Texture* nameTableTextures[2];
 	Byte mirroring;
 
 	Byte* paletteIndexes;
+
+
+	////////////////////////////////////////
+	///         PHASE TRACKERS           ///
+	////////////////////////////////////////
+
+	enum 
+	{
+		Visible,
+		PostRender,
+		VBlank,
+		PreRender,
+		VerticalPhaseSize
+	} verticalPhase;
+
+	enum
+	{
+		Idle,
+		Fetching,
+		SpriteFetching,
+		NextLineFetching,
+		Unknown,
+		HorizontalPhaseSize
+	} horizontalPhase;
+
+	Byte remainingCycles;
+
+	enum
+	{
+		Nametable,
+		Attribute,
+		PatternLow,
+		PatternHigh,
+		FetchingPhaseSize
+	} fetchingPhase;
+
+	////////////////////////////////////////
+	///            TILE DATA             ///
+	////////////////////////////////////////
+
+	struct
+	{
+		Byte x;
+		Byte y;
+	} nametablePos;
+	Byte tilePosY;
+
+	struct
+	{
+		Byte nametable;
+		Byte attribute;
+		
+		union
+		{
+			struct {
+				Byte lo;
+				Byte hi;
+			};
+
+			Word raw;
+
+		} tile;
+	} tileData;
+
+	struct FIFO16 loPatternFIFO;
+	struct FIFO16 hiPatternFIFO;
 
 	union
 	{
@@ -100,6 +193,8 @@ struct PPU
 
 	Word x, y;
 
+	struct Pixel* pixels;
+	SDL_Texture* screen;
 	struct Bus* bus;
 };
 
@@ -111,7 +206,7 @@ void ppuWrite(struct PPU* ppu, Word addr, Byte val);
 
 int tickPPU(struct PPU* ppu);
 
-SDL_Texture* getPatternTableTexture(struct PPU* ppu, int index);
 SDL_Texture* getNameTableTexture(struct PPU* ppu, int index);
+SDL_Texture* getScreenTexture(struct PPU* ppu);
 
 #endif // _PPU_H_

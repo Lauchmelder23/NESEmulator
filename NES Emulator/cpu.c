@@ -68,6 +68,7 @@ int tickCPU(struct CPU* cpu)
 
 			cpu->nmi = 0;
 
+			printf("NMI TRIGGERED FROM $%04x\n", cpu->pc.word);
 			cpu->pc.lo = readBus(cpu->bus, 0xFFFA);
 			cpu->pc.hi = readBus(cpu->bus, 0xFFFB);
 
@@ -333,6 +334,19 @@ void execute(struct CPU* cpu)
 
 			cpu->pc.word = target;
 		}
+	} break;
+
+	case BRK:
+	{
+		cpu->pc.word++;
+		Push(cpu->bus, cpu->pc.hi);
+		Push(cpu->bus, cpu->pc.lo);
+		Push(cpu->bus, cpu->status.raw | 0b00110000);
+
+		cpu->status.id = 1;
+		cpu->pc.hi = readBus(cpu->bus, 0xFFFF);
+		cpu->pc.lo = readBus(cpu->bus, 0xFFFE);
+
 	} break;
 
 	case BVC:

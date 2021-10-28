@@ -2,8 +2,10 @@
 #define _CARTRIDGE_H_
 
 #include "types.h"
+#include "SDL.h"
 
 struct Bus;
+struct Mapper;
 
 struct Cartridge
 {
@@ -34,8 +36,7 @@ struct Cartridge
 		Byte unused[7];
 	} header;
 
-	Byte* prg_rom;
-	Byte* chr_rom;
+	struct Mapper* mapper;
 
 	struct Bus* bus;
 };
@@ -44,7 +45,11 @@ struct Cartridge* createCartridge(struct Bus* parent, const char* filepath);
 void destroyCartridge(struct Cartridge* cartridge);
 
 // readCartridge/writeCartridge to and from the cartridge
-Byte readCartridge(struct Cartridge* cartridge, Word addr);
-void writeCartridge(struct Cartridge* cartridge, Word addr, Byte val);
+Byte readCartridgeCPU(struct Cartridge* cartridge, Word addr);
+Byte readCartridgePPU(struct Cartridge* cartridge, Word addr);
+void writeCartridgeCPU(struct Cartridge* cartridge, Word addr, Byte val);
+void writeCartridgePPU(struct Cartridge* cartridge, Word addr, Byte val);
+
+void getPatternTableTexture(struct Cartridge* cartridge, SDL_Texture* texture, int index);
 
 #endif //_CARTRIDGE_H_

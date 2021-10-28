@@ -1,6 +1,6 @@
 ﻿cmake_minimum_required (VERSION 3.8)
 
-add_executable (nesemu "main.c"  "cpu.h" "types.h" "bus.h" "bus.c" "cartridge.h" "cpu.c" "cartridge.c" "opcodes.c" "log.c" "ppu.h" "ppu.c")
+add_executable (nesemu "main.c"  "cpu.h" "types.h" "bus.h" "bus.c" "cartridge.h" "cpu.c" "cartridge.c" "opcodes.c" "log.c" "ppu.h" "ppu.c" "mapper.h" "mappers/mapper000.h" "mappers/mapper000.c" "mapper.c")
 
 target_include_directories(nesemu PUBLIC SDL2-static)
 target_link_libraries(nesemu PUBLIC SDL2-static SDL2main)
