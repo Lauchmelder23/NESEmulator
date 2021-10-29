@@ -50,7 +50,7 @@ void writeCartridgeCPU(struct Cartridge* cartridge, Word addr, Byte val)
 
 void writeCartridgePPU(struct Cartridge* cartridge, Word addr, Byte val)
 {
-	MapperReadPPU(cartridge->mapper, addr, val);
+	MapperWritePPU(cartridge->mapper, addr, val);
 }
 
 void getPatternTableTexture(struct Cartridge* cartridge, SDL_Texture* texture, int index)
