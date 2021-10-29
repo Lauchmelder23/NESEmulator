@@ -2,6 +2,7 @@
 #define _MAPPER_H_
 
 #include <stdio.h>
+#include "SDL.h"
 #include "types.h"
 
 struct PPU;
@@ -16,7 +17,7 @@ struct Mapper
 	void(*write_cpu)(void*, Word, Byte);
 	void(*write_ppu)(void*, Word, Byte);
 
-	void(*get_pattern_table_texture)(void*, void*, int);
+	void(*get_pattern_table_texture)(void*, SDL_Texture*, int);
 };
 
 #define MapperReadCPU(mapper, addr) mapper->read_cpu(mapper->mapperStruct, addr)

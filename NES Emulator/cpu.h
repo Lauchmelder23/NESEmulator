@@ -74,7 +74,7 @@ struct CPU
 	} pc;
 
 	char remainingCycles;
-	Qword totalCycles;
+	QWord totalCycles;
 
 	Byte fetchedVal;
 	Word fetchedAddress;

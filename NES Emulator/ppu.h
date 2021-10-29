@@ -27,6 +27,20 @@ struct FIFO16
 	};
 };
 
+union OAMEntry
+{
+	struct
+	{
+		Byte y;
+		Byte tile;
+		Byte attr;
+		Byte x;
+	};
+
+	DWord raw;
+};
+
+
 struct PPU
 {
 	////////////////////////////////////////
@@ -179,18 +193,7 @@ struct PPU
 	struct FIFO16 loPatternFIFO;
 	struct FIFO16 hiPatternFIFO;
 
-	union
-	{
-		struct
-		{
-			Byte y;
-			Byte tile;
-			Byte attr;
-			Byte x;
-		};
-
-		DWord raw;
-	}* oam;
+	union OAMEntry* oam;
 
 	Word x, y;
 

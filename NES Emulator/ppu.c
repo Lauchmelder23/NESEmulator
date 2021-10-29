@@ -44,7 +44,7 @@ struct PPU* createPPU(struct Bus* parent)
 
 
 
-	ppu->oam = (Byte*)malloc(0x100);
+	ppu->oam = (union OAMEntry*)malloc(0x100);
 	if (ppu->oam == NULL)
 	{
 		fprintf(stderr, "Failed to allocate memory for PPU OAM.\n");
@@ -353,7 +353,7 @@ SDL_Texture* getRenderedNameTableTexture(struct PPU* ppu, int index)
 	SDL_Texture* target = ppu->renderedNameTableTextures[index];
 	int pitch;
 	struct Pixel* pixels;
-	SDL_LockTexture(target, NULL, &pixels, &pitch);
+	SDL_LockTexture(target, NULL, (void**)&pixels, &pitch);
 
 	Byte patternTable = 0x1000 * ppu->ppuCtrl.bgTile;
 	for (int y = 0; y < 30; y++)

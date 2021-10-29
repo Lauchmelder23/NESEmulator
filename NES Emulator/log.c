@@ -7,7 +7,7 @@
 
 void logBusState(struct Bus* bus)
 {
-	const char buffer[32];
+	char buffer[32];
 
 	Word oldPC = bus->cpu->pc.word - bus->cpu->currentOpcode->length;
 
@@ -29,7 +29,7 @@ void logBusState(struct Bus* bus)
 	case ABX: sprintf(buffer, "$%04X, X -> $%04X",		(instructionBytes[2] << 8) | instructionBytes[1], bus->cpu->fetchedAddress); break;
 	case ABY: sprintf(buffer, "$%04X, Y -> $%04X",		(instructionBytes[2] << 8) | instructionBytes[1], bus->cpu->fetchedAddress); break;
 	case IMM: sprintf(buffer, "#$%02X",					bus->cpu->fetchedVal); break;
-	case IMP: sprintf(buffer, ""); break;
+	case IMP: sprintf(buffer, " "); break;
 	case IND: sprintf(buffer, "($%04X) -> $%04X",		(instructionBytes[2] << 8) | instructionBytes[1], bus->cpu->fetchedAddress); break;
 	case INDX: sprintf(buffer, "($%02X, X) -> $%04X",	instructionBytes[1], bus->cpu->fetchedAddress); break;
 	case INDY: sprintf(buffer, "($%02X), Y -> $%04X",	instructionBytes[1], bus->cpu->fetchedAddress); break;

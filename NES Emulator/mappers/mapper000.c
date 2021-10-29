@@ -42,8 +42,9 @@ void destroyMapper000(struct Mapper000* mapper)
 	free(mapper);
 }
 
-Byte Mapper000_ReadCPU(struct Mapper000* mapper, Word address)
+Byte Mapper000_ReadCPU(void* mapper, Word address)
 {
+	struct Mapper000* sMapper = (struct Mapper000*)mapper;
 	Byte val = 0x00;
 
 	if (address >= 0x6000 && address < 0x8000)
@@ -54,9 +55,9 @@ Byte Mapper000_ReadCPU(struct Mapper000* mapper, Word address)
 	else if (address >= 0x8000)
 	{
 		Word effectiveAddress = address - 0x8000;
-		effectiveAddress %= 0x4000 * (mapper->prg_rom_size == 1);
+		effectiveAddress %= 0x4000 * (sMapper->prg_rom_size == 1);
 
-		val = mapper->prg_rom[effectiveAddress];
+		val = sMapper->prg_rom[effectiveAddress];
 	}
 	else
 	{
@@ -67,8 +68,9 @@ Byte Mapper000_ReadCPU(struct Mapper000* mapper, Word address)
 	return val;
 }
 
-Byte Mapper000_ReadPPU(struct Mapper000* mapper, Word address)
+Byte Mapper000_ReadPPU(void* mapper, Word address)
 {
+	struct Mapper000* sMapper = (struct Mapper000*)mapper;
 	Byte val = 0x00;
 
 	if (address >= 0x2000)
@@ -78,28 +80,30 @@ Byte Mapper000_ReadPPU(struct Mapper000* mapper, Word address)
 	}
 	else 
 	{
-		val = mapper->chr_rom[address];
+		val = sMapper->chr_rom[address];
 	}
 
 	return val;
 }
 
-void Mapper000_WriteCPU(struct Mapper000* mapper, Word address, Byte value)
+void Mapper000_WriteCPU(void* mapper, Word address, Byte value)
 {
 	// nothing
 }
 
 
-void Mapper000_WritePPU(struct Mapper000* mapper, Word address, Byte value)
+void Mapper000_WritePPU(void* mapper, Word address, Byte value)
 {
 	// nothing
 }
 
-void Mapper000_GetPatternTableTexture(struct Mapper000* mapper, SDL_Texture* texture, int index)
+void Mapper000_GetPatternTableTexture(void* mapper, SDL_Texture* texture, int index)
 {
+	struct Mapper000* sMapper = (struct Mapper000*)mapper;
+
 	int pitch;
 	void* pixels;
 	SDL_LockTexture(texture, NULL, &pixels, &pitch);
-	SDL_memcpy(pixels, mapper->chr_rom + 0x1000 * index, 0x1000);
+	SDL_memcpy(pixels, sMapper->chr_rom + 0x1000 * index, 0x1000);
 	SDL_UnlockTexture(texture);
 }
