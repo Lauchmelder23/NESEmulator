@@ -108,6 +108,7 @@ struct PPU
 
 	Byte* nameTables[2];
 	SDL_Texture* nameTableTextures[2];
+	SDL_Texture* renderedNameTableTextures[2];
 	Byte mirroring;
 
 	Byte* paletteIndexes;
@@ -208,5 +209,6 @@ int tickPPU(struct PPU* ppu);
 
 SDL_Texture* getNameTableTexture(struct PPU* ppu, int index);
 SDL_Texture* getScreenTexture(struct PPU* ppu);
+SDL_Texture* getRenderedNameTableTexture(struct PPU* ppu, int index);
 
 #endif // _PPU_H_

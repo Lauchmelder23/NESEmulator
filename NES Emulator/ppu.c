@@ -30,6 +30,7 @@ struct PPU* createPPU(struct Bus* parent)
 	{
 		ppu->nameTables[i] = ppu->nameTables[0] + ((size_t)0x0400 * i);
 		ppu->nameTableTextures[i] = SDL_CreateTexture(parent->screen, SDL_PIXELFORMAT_RGB332, SDL_TEXTUREACCESS_STREAMING, 32, 32);
+		ppu->renderedNameTableTextures[i] = SDL_CreateTexture(parent->screen, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, 256, 240);
 	}
 
 
@@ -93,7 +94,10 @@ void destroyPPU(struct PPU* ppu)
 	free(ppu->paletteIndexes);
 
 	for (int i = 0; i < 2; i++)
+	{
+		SDL_DestroyTexture(ppu->renderedNameTableTextures[i]);
 		SDL_DestroyTexture(ppu->nameTableTextures[i]);
+	}
 	free(ppu->nameTables[0]);
 
 	free(ppu);
@@ -257,13 +261,13 @@ int tickPPU(struct PPU* ppu)
 						ppu->loPatternFIFO.lo = ppu->tileData.tile.lo;
 					}
 
-					ppu->tileData.nametable = ppu->nameTables[0][((size_t)0x2000 + (size_t)0x400 * ppu->ppuCtrl.nametable) + (size_t)0x20* tileY + tileX];
+					ppu->tileData.nametable = ppu->nameTables[ppu->ppuCtrl.nametable][(size_t)32 * tileY + tileX];
 					break;
 				}
 
 				case Attribute:
 				{
-					ppu->tileData.attribute = ppu->nameTables[0][0x3C0 + ((tileY >> 2) * 8) + (tileX >> 2)];
+					ppu->tileData.attribute = ppu->nameTables[ppu->ppuCtrl.nametable][0x3C0 + ((tileY >> 2) * 8) + (tileX >> 2)];
 					break;
 				}
 
@@ -280,7 +284,7 @@ int tickPPU(struct PPU* ppu)
 				}
 				}
 
-				ppu->remainingCycles = 1;
+				ppu->remainingCycles = 2;
 				ppu->fetchingPhase = (ppu->fetchingPhase + 1) % FetchingPhaseSize;
 			}
 
@@ -342,4 +346,38 @@ SDL_Texture* getScreenTexture(struct PPU* ppu)
 	SDL_UnlockTexture(ppu->screen);
 
 	return ppu->screen;
+}
+
+SDL_Texture* getRenderedNameTableTexture(struct PPU* ppu, int index)
+{
+	SDL_Texture* target = ppu->renderedNameTableTextures[index];
+	int pitch;
+	struct Pixel* pixels;
+	SDL_LockTexture(target, NULL, &pixels, &pitch);
+
+	Byte patternTable = 0x1000 * ppu->ppuCtrl.bgTile;
+	for (int y = 0; y < 30; y++)
+	{
+		for (int x = 0; x < 32; x++)
+		{
+			Byte offset = ppu->nameTables[index][y * 32 + x];
+
+			for (int row = 0; row < 8; row++)
+			{
+				Byte dataHi = readCartridgePPU(ppu->bus->cartridge, patternTable + offset * 16 + row + 8);
+				Byte dataLo = readCartridgePPU(ppu->bus->cartridge, patternTable + offset * 16 + row);
+
+				for (int bit = 0; bit < 8; bit++)
+				{
+					Byte color = (((dataHi << bit) & 0x80) >> 6) | (((dataLo << bit) & 0x80) >> 7);
+					pixels[y * (256 * 8) + row * 256 + x * 8 + bit].r = 50 * color;
+					pixels[y * (256 * 8) + row * 256 + x * 8 + bit].g = 50 * color;
+					pixels[y * (256 * 8) + row * 256 + x * 8 + bit].b = 50 * color;
+				}
+			}
+		}
+	}
+
+	SDL_UnlockTexture(target);
+	return target;
 }

@@ -9,7 +9,7 @@ int main(int argc, char** argv)
 {
 	SDL_Init(SDL_INIT_VIDEO);
 
-	SDL_Window* window = SDL_CreateWindow("NES Emulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1400, 800, SDL_WINDOW_SHOWN);
+	SDL_Window* window = SDL_CreateWindow("NES Emulator", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 1400, 900, SDL_WINDOW_SHOWN);
 	if (window == NULL)
 	{
 		fprintf(stderr, "Failed to create SDL_Window.\n");
@@ -75,6 +75,15 @@ int main(int argc, char** argv)
 		SDL_RenderCopy(renderer, tableTexture, NULL, &target);
 
 		tableTexture = getNameTableTexture(bus->ppu, 1);
+		target.x = 256 + 10 + 10;
+		SDL_RenderCopy(renderer, tableTexture, NULL, &target);
+
+		tableTexture = getRenderedNameTableTexture(bus->ppu, 0);
+		target.x = 10;
+		target.y = 256 + 10 + 10 + 10 + 256;
+		SDL_RenderCopy(renderer, tableTexture, NULL, &target);
+
+		tableTexture = getRenderedNameTableTexture(bus->ppu, 1);
 		target.x = 256 + 10 + 10;
 		SDL_RenderCopy(renderer, tableTexture, NULL, &target);
 
