@@ -5,12 +5,12 @@
 #include "log.h"
 #include "bus.h"
 
-inline void Push(struct Bus* bus, Byte val)
+static inline void Push(struct Bus* bus, Byte val)
 {
 	writeBus(bus, 0x0100 + (bus->cpu->sp--), val);
 }
 
-inline Byte Pop(struct Bus* bus)
+static inline Byte Pop(struct Bus* bus)
 {
 	return readBus(bus, 0x0100 + (++bus->cpu->sp));
 }

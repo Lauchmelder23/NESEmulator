@@ -37,7 +37,7 @@ struct Opcode
 	const char str[4];
 };
 
-const struct Opcode OPCODE_TABLE[256];
+extern const struct Opcode OPCODE_TABLE[256];
 
 
 struct CPU
@@ -74,7 +74,7 @@ struct CPU
 	} pc;
 
 	char remainingCycles;
-	size_t totalCycles;
+	Qword totalCycles;
 
 	Byte fetchedVal;
 	Word fetchedAddress;
