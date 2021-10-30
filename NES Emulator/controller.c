@@ -15,7 +15,7 @@ Byte pollInput(struct Controller* controller)
 
 void fillRegister(struct Controller* controller)
 {
-	Byte* keyboard = SDL_GetKeyboardState(NULL);
+	const Byte* keyboard = SDL_GetKeyboardState(NULL);
 
 	controller->data.A = keyboard[SDL_SCANCODE_A];
 	controller->data.B = keyboard[SDL_SCANCODE_S];
