@@ -131,7 +131,8 @@ Byte ppuRead(struct PPU* ppu, Word addr)
 	{
 		if (ppu->ppuAddress.raw < 0x2000)
 		{
-			val = readCartridgePPU(ppu->bus->cartridge, ppu->ppuAddress.raw);
+			val = ppu->ppuReadLatch;
+			ppu->ppuReadLatch = readCartridgePPU(ppu->bus->cartridge, ppu->ppuAddress.raw);
 		}
 		else if (0x2000 <= ppu->ppuAddress.raw && ppu->ppuAddress.raw < 0x3F00)
 		{
@@ -140,7 +141,8 @@ Byte ppuRead(struct PPU* ppu, Word addr)
 			if (effectiveAddress >= 0x2800)
 				effectiveAddress -= 0x0400;
 
-			val = ppu->nameTables[0][(effectiveAddress - 0x2000) & 0x0FFF];
+			val = ppu->ppuReadLatch;
+			ppu->ppuReadLatch = ppu->nameTables[0][(effectiveAddress - 0x2000) & 0x0FFF];
 		}
 		else if (0x3F00 <= ppu->ppuAddress.raw && ppu->ppuAddress.raw < 0x4000)
 		{

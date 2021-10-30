@@ -113,6 +113,7 @@ struct PPU
 		Word raw;
 	} ppuAddress;
 	Byte ppuAddressWriteTarget;
+	Byte ppuReadLatch;
 
 	Byte oamdma;
 
