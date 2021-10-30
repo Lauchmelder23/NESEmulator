@@ -2,11 +2,14 @@
 #define _BUS_H_
 
 #include "types.h"
+#include "controller.h"
+
 #include <SDL.h>
 
 struct CPU;
 struct PPU;
 struct Cartridge;
+
 
 // Main communication path for devices and memory in the NES
 struct Bus
@@ -17,6 +20,7 @@ struct Bus
 	struct CPU* cpu;
 	struct PPU* ppu;
 	struct Cartridge* cartridge;
+	struct Controller controller;
 
 	Byte masterClockTimer;
 

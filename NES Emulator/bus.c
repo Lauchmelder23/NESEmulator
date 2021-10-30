@@ -74,7 +74,12 @@ Byte readBus(struct Bus* bus, Word addr)
 	}
 	else if (0x4000 <= addr && addr <= 0x4017)	// I/O space
 	{
-		val = bus->io[addr - 0x4000];
+		switch (addr)
+		{
+		case 0x4016:
+			val = pollInput(&bus->controller);
+			break;
+		}
 	}
 	else if (0x4020 <= addr && addr <= 0xFFFF)	// Cartridge space
 	{
@@ -102,7 +107,14 @@ void writeBus(struct Bus* bus, Word addr, Byte val)
 	}
 	else if (0x4000 <= addr && addr <= 0x4017)	// I/O space
 	{
-		bus->io[addr - 0x4000] = val;
+		switch (addr)
+		{
+		case 0x4016:
+			bus->controller.strobe = (val & 0x1);
+			if (val & 0x1)
+				fillRegister(&bus->controller);
+			break;
+		}
 	}
 	else if (0x4020 <= addr && addr <= 0xFFFF)	// Cartridge space
 	{

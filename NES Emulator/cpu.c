@@ -68,7 +68,7 @@ int tickCPU(struct CPU* cpu)
 
 			cpu->nmi = 0;
 
-			printf("NMI TRIGGERED FROM $%04x\n", cpu->pc.word);
+			// printf("NMI TRIGGERED FROM $%04x\n", cpu->pc.word);
 			cpu->pc.lo = readBus(cpu->bus, 0xFFFA);
 			cpu->pc.hi = readBus(cpu->bus, 0xFFFB);
 
@@ -225,7 +225,7 @@ void prepareFetch(struct CPU* cpu)
 
 void fetch(struct CPU* cpu)
 {
-	if(cpu->currentOpcode->addr != IMP)
+	if(cpu->currentOpcode->addr != IMP && cpu->currentOpcode->addr != ACC)
 		cpu->fetchedVal = readBus(cpu->bus, cpu->fetchedAddress);
 }
 
