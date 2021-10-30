@@ -12,7 +12,7 @@ static inline void Push(struct Bus* bus, Byte val)
 
 static inline Byte Pop(struct Bus* bus)
 {
-	return readBus(bus, 0x0100 + (++bus->cpu->sp));
+	return readBus(bus, 0x0100 + (++bus->cpu->sp), 0);
 }
 
 struct CPU* createCPU(struct Bus* parent)
@@ -26,7 +26,7 @@ struct CPU* createCPU(struct Bus* parent)
 
 	// TODO: THIS IS JUST FOR THE TEST ROM
 	cpu->pc.word = 0xC000;
-	cpu->pc.word = ((Word)readBus(parent, 0xFFFD) << 8) | readBus(parent, 0xFFFC);
+	cpu->pc.word = ((Word)readBus(parent, 0xFFFD, 0) << 8) | readBus(parent, 0xFFFC, 0);
 
 	cpu->status.raw = 0x34;
 	cpu->acc = 0;
@@ -94,7 +94,7 @@ int tickCPU(struct CPU* cpu)
 
 	if (cpu->remainingCycles == 0)
 	{
-		fetch(cpu);
+		prepareFetch(cpu);
 		execute(cpu);
 		return 1;
 	}
@@ -107,7 +107,7 @@ void tickInstr(struct CPU* cpu)
 	while (!tickCPU(cpu));
 }
 
-void fetch(struct CPU* cpu)
+void prepareFetch(struct CPU* cpu)
 {
 	Byte opcodeVal = readBus(cpu->bus, cpu->pc.word);
 	cpu->currentOpcode = OPCODE_TABLE + opcodeVal;
@@ -161,7 +161,7 @@ void fetch(struct CPU* cpu)
 	} break;
 	
 	case IMM:
-		cpu->fetchedVal = readBus(cpu->bus, cpu->pc.word++);
+		cpu->fetchedAddress = cpu->pc.word++;
 		return;
 
 	case IMP:
@@ -221,8 +221,12 @@ void fetch(struct CPU* cpu)
 	} break;
 
 	}
+}
 
-	cpu->fetchedVal = readBus(cpu->bus, cpu->fetchedAddress);
+void fetch(struct CPU* cpu)
+{
+	if(cpu->currentOpcode->addr != IMP)
+		cpu->fetchedVal = readBus(cpu->bus, cpu->fetchedAddress);
 }
 
 void execute(struct CPU* cpu)
@@ -233,6 +237,7 @@ void execute(struct CPU* cpu)
 	{
 	case ADC:
 	{
+		fetch(cpu);
 		Word result = cpu->acc + cpu->fetchedVal + cpu->status.carry;
 
 		cpu->status.carry = (result > 0xFF);
@@ -245,6 +250,7 @@ void execute(struct CPU* cpu)
 
 	case AND:
 	{
+		fetch(cpu);
 		cpu->acc &= cpu->fetchedVal;
 
 		cpu->status.negative = (cpu->acc >> 7);
@@ -253,6 +259,7 @@ void execute(struct CPU* cpu)
 
 	case ASL:
 	{
+		fetch(cpu);
 		cpu->status.carry = ((cpu->fetchedVal & 0x80) == 0x80);
 
 		cpu->fetchedVal <<= 1;
@@ -379,6 +386,7 @@ void execute(struct CPU* cpu)
 
 	case BIT:
 	{
+		fetch(cpu);
 		cpu->status.negative = (cpu->fetchedVal >> 7);
 		cpu->status.overflow = (cpu->fetchedVal >> 6);
 		cpu->status.zero = ((cpu->acc & cpu->fetchedVal) == 0x00);
@@ -415,6 +423,7 @@ void execute(struct CPU* cpu)
 
 	case CMP:
 	{
+		fetch(cpu);
 		Byte result = cpu->acc - cpu->fetchedVal;
 
 		cpu->status.negative = (result >> 7);
@@ -424,6 +433,7 @@ void execute(struct CPU* cpu)
 
 	case CPX:
 	{
+		fetch(cpu);
 		Byte result = cpu->x - cpu->fetchedVal;
 
 		cpu->status.negative = (result >> 7);
@@ -433,6 +443,7 @@ void execute(struct CPU* cpu)
 
 	case CPY:
 	{
+		fetch(cpu);
 		Byte result = cpu->y - cpu->fetchedVal;
 
 		cpu->status.negative = (result >> 7);
@@ -442,6 +453,7 @@ void execute(struct CPU* cpu)
 
 	case DCP:
 	{
+		fetch(cpu);
 		cpu->fetchedVal--;
 		writeBus(cpu->bus, cpu->fetchedAddress, cpu->fetchedVal);
 		Byte result = cpu->acc - cpu->fetchedVal;
@@ -455,6 +467,7 @@ void execute(struct CPU* cpu)
 
 	case DEC:
 	{
+		fetch(cpu);
 		cpu->fetchedVal--;
 
 		cpu->status.negative = ((cpu->fetchedVal & 0x80) == 0x80);
@@ -481,6 +494,7 @@ void execute(struct CPU* cpu)
 
 	case EOR:
 	{
+		fetch(cpu);
 		cpu->acc ^= cpu->fetchedVal;
 
 		cpu->status.negative = (cpu->acc >> 7);
@@ -489,6 +503,7 @@ void execute(struct CPU* cpu)
 
 	case INC:
 	{
+		fetch(cpu);
 		cpu->fetchedVal++;
 
 		cpu->status.negative = ((cpu->fetchedVal & 0x80) == 0x80);
@@ -515,6 +530,7 @@ void execute(struct CPU* cpu)
 
 	case ISC:
 	{
+		fetch(cpu);
 		cpu->fetchedVal++;
 		writeBus(cpu->bus, cpu->fetchedAddress, cpu->fetchedVal);
 		Word result = cpu->acc + ~cpu->fetchedVal + cpu->status.carry;
@@ -545,6 +561,7 @@ void execute(struct CPU* cpu)
 
 	case LAX:
 	{
+		fetch(cpu);
 		cpu->acc = cpu->fetchedVal;
 		cpu->x = cpu->fetchedVal;
 
@@ -554,6 +571,7 @@ void execute(struct CPU* cpu)
 
 	case LDA:
 	{
+		fetch(cpu);
 		cpu->acc = cpu->fetchedVal;
 
 		cpu->status.negative = (cpu->acc >> 7);
@@ -562,6 +580,7 @@ void execute(struct CPU* cpu)
 
 	case LDX:
 	{
+		fetch(cpu);
 		cpu->x = cpu->fetchedVal;
 
 		cpu->status.negative = (cpu->x >> 7);
@@ -570,6 +589,7 @@ void execute(struct CPU* cpu)
 
 	case LDY:
 	{
+		fetch(cpu);
 		cpu->y = cpu->fetchedVal;
 
 		cpu->status.negative = (cpu->y >> 7);
@@ -578,6 +598,7 @@ void execute(struct CPU* cpu)
 
 	case LSR:
 	{
+		fetch(cpu);
 		cpu->status.negative = 0;
 		cpu->status.carry = ((cpu->fetchedVal & 0x01) == 0x01);
 
@@ -598,6 +619,7 @@ void execute(struct CPU* cpu)
 
 	case ORA:
 	{
+		fetch(cpu);
 		cpu->acc |= cpu->fetchedVal;
 
 		cpu->status.negative = (cpu->acc >> 7);
@@ -630,6 +652,7 @@ void execute(struct CPU* cpu)
 
 	case RLA:
 	{
+		fetch(cpu);
 		Byte oldCarry = cpu->status.carry;
 		cpu->status.carry = ((cpu->fetchedVal & 0x80) == 0x80);
 
@@ -647,6 +670,7 @@ void execute(struct CPU* cpu)
 
 	case ROL:
 	{
+		fetch(cpu);
 		Byte oldCarry = cpu->status.carry;
 		cpu->status.carry = ((cpu->fetchedVal & 0x80) == 0x80);
 
@@ -664,6 +688,7 @@ void execute(struct CPU* cpu)
 
 	case ROR:
 	{
+		fetch(cpu);
 		Byte oldCarry = cpu->status.carry;
 		cpu->status.negative = oldCarry;
 		cpu->status.carry = ((cpu->fetchedVal & 0x01) == 0x01);
@@ -681,6 +706,7 @@ void execute(struct CPU* cpu)
 
 	case RRA:
 	{
+		fetch(cpu);
 		Byte oldCarry = cpu->status.carry;
 		cpu->status.carry = ((cpu->fetchedVal & 0x01) == 0x01);
 
@@ -722,6 +748,7 @@ void execute(struct CPU* cpu)
 
 	case SBC:
 	{
+		fetch(cpu);
 		Word result = cpu->acc + ~cpu->fetchedVal + cpu->status.carry;
 
 		cpu->status.carry = ((result & 0x8000) != 0x8000);
@@ -749,6 +776,7 @@ void execute(struct CPU* cpu)
 
 	case SLO:
 	{
+		fetch(cpu);
 		cpu->status.carry = ((cpu->fetchedVal & 0x80) == 0x80);
 
 		cpu->fetchedVal <<= 1;
@@ -764,6 +792,7 @@ void execute(struct CPU* cpu)
 
 	case SRE:
 	{
+		fetch(cpu);
 		cpu->status.carry = ((cpu->fetchedVal & 0x01) == 0x01);
 
 		cpu->fetchedVal >>= 1;

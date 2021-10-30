@@ -94,6 +94,7 @@ void destroyCPU(struct CPU* cpu);
 int tickCPU(struct CPU* cpu);
 void tickInstr(struct CPU* cpu);
 
+void prepareFetch(struct CPU* cpu);
 void fetch(struct CPU* cpu);
 void execute(struct CPU* cpu);
 

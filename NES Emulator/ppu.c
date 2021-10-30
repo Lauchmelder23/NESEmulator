@@ -151,7 +151,7 @@ Byte ppuRead(struct PPU* ppu, Word addr)
 			fprintf(stderr, "PPU access violation at $%04X", ppu->ppuAddress.raw);
 			exit(1);
 		}
-		ppu->ppuAddress.raw += ppu->ppuCtrl.increment;
+		ppu->ppuAddress.raw += 1 + 31 * (ppu->ppuCtrl.increment == 1);
 	}
 		break;
 
@@ -213,7 +213,7 @@ void ppuWrite(struct PPU* ppu, Word addr, Byte val)
 			fprintf(stderr, "PPU access violation at $%04X", ppu->ppuAddress.raw);
 			exit(1);
 		}
-		ppu->ppuAddress.raw += (ppu->ppuCtrl.increment == 0 ? 1 : 32);
+		ppu->ppuAddress.raw += 1 + 31 * (ppu->ppuCtrl.increment == 1);
 		break;
 	}
 

@@ -16,7 +16,7 @@ void logBusState(struct Bus* bus)
 	Word instructionBytes[3];
 	for (int i = 0; i < bus->cpu->currentOpcode->length; i++)
 	{
-		instructionBytes[i] = readBus(bus, oldPC + i);
+		instructionBytes[i] = readBus(bus, oldPC + i, 0);
 		sprintf(buffer + 3 * i, "%02X ", instructionBytes[i]);
 	}
 
