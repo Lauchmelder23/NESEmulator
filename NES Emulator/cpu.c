@@ -12,7 +12,7 @@ static inline void Push(struct Bus* bus, Byte val)
 
 static inline Byte Pop(struct Bus* bus)
 {
-	return readBus(bus, 0x0100 + (++bus->cpu->sp), 0);
+	return readBus(bus, 0x0100 + (++bus->cpu->sp));
 }
 
 struct CPU* createCPU(struct Bus* parent)
@@ -26,7 +26,7 @@ struct CPU* createCPU(struct Bus* parent)
 
 	// TODO: THIS IS JUST FOR THE TEST ROM
 	cpu->pc.word = 0xC000;
-	cpu->pc.word = ((Word)readBus(parent, 0xFFFD, 0) << 8) | readBus(parent, 0xFFFC, 0);
+	cpu->pc.word = ((Word)readBus(parent, 0xFFFD) << 8) | readBus(parent, 0xFFFC);
 
 	cpu->status.raw = 0x34;
 	cpu->acc = 0;
