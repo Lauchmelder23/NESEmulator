@@ -104,6 +104,6 @@ void Mapper000_GetPatternTableTexture(void* mapper, SDL_Texture* texture, int in
 	int pitch;
 	void* pixels;
 	SDL_LockTexture(texture, NULL, &pixels, &pitch);
-	SDL_memcpy(pixels, sMapper->chr_rom + 0x1000 * index, 0x1000);
+	SDL_memcpy(pixels, sMapper->chr_rom + (size_t)0x1000 * index, 0x1000);
 	SDL_UnlockTexture(texture);
 }

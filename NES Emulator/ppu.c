@@ -357,12 +357,12 @@ SDL_Texture* getRenderedNameTableTexture(struct PPU* ppu, int index)
 	struct Pixel* pixels;
 	SDL_LockTexture(target, NULL, (void**)&pixels, &pitch);
 
-	Byte patternTable = 0x1000 * ppu->ppuCtrl.bgTile;
+	Word patternTable = 0x1000 * ppu->ppuCtrl.bgTile;
 	for (int y = 0; y < 30; y++)
 	{
 		for (int x = 0; x < 32; x++)
 		{
-			Byte offset = ppu->nameTables[index][y * 32 + x];
+			Byte offset = ppu->nameTables[index][(size_t)y * 32 + x];
 
 			for (int row = 0; row < 8; row++)
 			{
