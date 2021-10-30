@@ -236,10 +236,15 @@ int tickPPU(struct PPU* ppu)
 	switch (ppu->verticalPhase)
 	{
 	case PreRender:
-		break;
+	{
+		if (ppu->x == 280)
+			ppu->ppuAddress.raw = 0x2000 + 0x0400 * ppu->ppuCtrl.nametable;
+	} break;
 
 	case Visible:
 	{
+		if (!ppu->ppuMask.bgEnable)
+			break;
 		// Fetching
 		switch (ppu->horizontalPhase)
 		{
@@ -269,7 +274,7 @@ int tickPPU(struct PPU* ppu)
 
 				case Attribute:
 				{
-					ppu->tileData.attribute = ppu->nameTables[ppu->ppuCtrl.nametable][0x3C0 + ((tileY >> 2) * 8) + (tileX >> 2)];
+					ppu->tileData.attribute = ppu->nameTables[ppu->ppuCtrl.nametable][0x3C0];
 					break;
 				}
 
@@ -282,6 +287,7 @@ int tickPPU(struct PPU* ppu)
 				case PatternHigh:
 				{
 					ppu->tileData.tile.hi = readCartridgePPU(ppu->bus->cartridge, 0x1000 * ppu->ppuCtrl.bgTile + (ppu->tileData.nametable * 16) + (ppu->y % 8) + 8);
+					ppu->ppuAddress.raw++;
 					break;
 				}
 				}
