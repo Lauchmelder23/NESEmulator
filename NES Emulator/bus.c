@@ -34,7 +34,7 @@ struct Bus* createBus(SDL_Renderer* renderer)
 	memset(bus->ram, 0x00, 0x18);
 
 	// Create and insert cartridge
-	bus->cartridge = createCartridge(bus, "roms/donkeykong.nes");
+	bus->cartridge = createCartridge(bus, "roms/nestest.nes");
 
 	// Create CPU and attach it
 	bus->cpu = createCPU(bus);

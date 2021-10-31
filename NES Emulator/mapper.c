@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include "mappers/mapper000.h"
+#include "mappers/mapper001.h"
 
 struct Mapper* createMapper(Byte id, Byte prg_rom_size, Byte chr_rom_size, FILE* fp)
 {
@@ -28,6 +29,18 @@ struct Mapper* createMapper(Byte id, Byte prg_rom_size, Byte chr_rom_size, FILE*
 		mapper->write_cpu = &Mapper000_WriteCPU;
 		mapper->write_ppu = &Mapper000_WritePPU;
 		mapper->get_pattern_table_texture = &Mapper000_GetPatternTableTexture;
+	} break;
+
+	case 1:
+	{
+		struct Mapper001* mp = createMapper001(prg_rom_size, chr_rom_size, fp);
+		mapper->mapperStruct = (void*)mp;
+
+		mapper->read_cpu = &Mapper001_ReadCPU;
+		mapper->read_ppu = &Mapper001_ReadPPU;
+		mapper->write_cpu = &Mapper001_WriteCPU;
+		mapper->write_ppu = &Mapper001_WritePPU;
+		mapper->get_pattern_table_texture = &Mapper001_GetPatternTableTexture;
 	} break;
 
 	default:
